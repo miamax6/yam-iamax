@@ -10,7 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="yam.iamax">
+<meta name="apple-mobile-web-app-title" content="m.YAM.ax">
 <meta name="theme-color" content="#e63946">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -159,7 +159,7 @@ thead tr th.ca{background:#2a3a52!important;color:var(--blu)!important}
 </head>
 <body>
 <nav>
-  <span class="logo" onclick="showView('home')">🎲 YAM'S</span>
+  <span class="logo" onclick="showView('home')" id="nav-logo">🎲 YAM'S</span>
   <div class="nav-links">
     <button class="nav-btn" id="nb-home"     onclick="showView('home')"></button>
     <button class="nav-btn" id="nb-history"  onclick="showView('history')"></button>
@@ -257,47 +257,47 @@ const L={
     chanceSub:"0 pts — backup slot",brelanSub:"sum of dice",
   },
   de:{
-    navHome:"Start",navHistory:"Verlauf",navChamp:"Champion",navResume:"● Läuft",
-    homeSub:"Spielblatt · Verlauf · Rangliste",homeNew:"✦ Neues Spiel",
+    navHome:"Start",navHistory:"Partien",navChamp:"Bestenliste",navResume:"● Läuft noch",
+    homeSub:"Spielzettel · Spielverlauf · Rangliste",homeNew:"✦ Neues Spiel",
     installBtn:"📲 App installieren",
-    modeTitle:"Spielmodus",modeClassic:"🏛 Klassisch",modeCustom:"⚡ Benutzerd.",
+    modeTitle:"Spielmodus",modeClassic:"🏛 Klassisch",modeCustom:"⚡ Hausregeln",
     modeClassicDesc:"Standardregeln: Chance, Dreierpasch, Kleine/Große Straße, Full House, Vierling, Kniffel.",
-    modeCustomDesc:"Eigene Regeln: +, −, <11, Dreierpasch, Kleine/Große Straße, Full House, Vierling, Kniffel.",
-    playersTitle:"Spieler & Reihenfolge",playerOrder:"Spielreihenfolge ↑↓",
-    playerPh:"Name…",playerNone:"Keine Spieler hinzugefügt",
+    modeCustomDesc:"Hausregeln: +, −, <11, Dreierpasch, Kleine/Große Straße, Full House, Vierling, Kniffel.",
+    playersTitle:"Spieler & Zugreihenfolge",playerOrder:"Zugreihenfolge festlegen ↑↓",
+    playerPh:"Name…",playerNone:"Noch keine Spieler eingetragen",
     back:"← Zurück",play:"Spielen",
-    turnOf:"👉 Dran:",colPlayers:"Spieler",
-    totSup:"Obere Summe",bonus63:"Bonus ≥63",plusBonus:"+ Bonus",
-    inferior:"Untere Sektion",totInf:"Untere Summe",total:"GESAMT",
-    quit:"← Beenden",reorderBtn:"⇄ Spieler",finish:"🏁 Beenden",inProgress:"Spiel läuft…",
-    confirmQuit:"Beenden? Die Punkte gehen verloren.",
-    bravo:"Bravo",pts:"Punkte",shareBtn:"📤 Teilen",
-    histChart:"Punkteverlauf",histNone:"Keine Spiele aufgezeichnet.",
+    turnOf:"👉 Am Zug:",colPlayers:"Spieler",
+    totSup:"Oberer Teil",bonus63:"Bonus ≥63",plusBonus:"+ Bonus",
+    inferior:"Unterer Teil",totInf:"Untere Summe",total:"GESAMT",
+    quit:"← Abbrechen",reorderBtn:"⇄ Reihenfolge",finish:"🏁 Spiel beenden",inProgress:"Spiel läuft…",
+    confirmQuit:"Spiel wirklich abbrechen? Der aktuelle Spielstand geht verloren.",
+    bravo:"Herzlichen Glückwunsch",pts:"Punkte",shareBtn:"📤 Teilen",
+    histChart:"Punkteverlauf",histNone:"Noch keine Spiele gespeichert.",
     histExport:"⬇ Exportieren",histImport:"⬆ Importieren",
     histGame:"Spiel",histGames:"Spiele",
-    confirmDel:"Dieses Spiel löschen?",
-    impOk:(n)=>`✅ ${n} Spiel${n>1?"e":""} importiert`,
-    champTitle:"Gesamtrangliste (alle Modi)",champNone:"Noch kein Champion.",
-    champPlayer:"Spieler",champBest:"Bestes",champWins:"Siege",champGames:"Spiele",champAvg:"Ø",
-    reorderTitle:"Spielerreihenfolge",
+    confirmDel:"Dieses Spiel wirklich löschen?",
+    impOk:(n)=>`✅ ${n} Spiel${n>1?"e":""} erfolgreich importiert`,
+    champTitle:"Gesamtrangliste (alle Spielmodi)",champNone:"Noch kein Sieger ermittelt.",
+    champPlayer:"Spieler",champBest:"Bestpunktzahl",champWins:"Siege",champGames:"Spiele",champAvg:"Ø-Pkt.",
+    reorderTitle:"Zugreihenfolge ändern",
     rows:{
-      ones:"Summe der Einsen",twos:"Summe der Zweien",threes:"Summe der Dreien",
-      fours:"Summe der Vieren",fives:"Summe der Fünfen",sixes:"Summe der Sechsen",
-      chance:"Notfeld — 0 Punkte",brelan:"Dreierpasch → Summe aller 5 Würfel",
-      psuit:"Kleine Straße → 25 Pkt",full:"Full House → 30 Pkt",
-      gsuit:"Große Straße → 35 Pkt",carre:"Vierling → 40 Pkt",
-      yams:"Kniffel → 50 Pkt",
-      plus:"Summe aller 5 Würfel (positiv)",minus:"Summe aller 5 Würfel (negativ)",less11:"Summe ≤ 10 → 20 Pkt",
+      ones:"Summe aller Einsen",twos:"Summe aller Zweien",threes:"Summe aller Dreien",
+      fours:"Summe aller Vieren",fives:"Summe aller Fünfen",sixes:"Summe aller Sechsen",
+      chance:"Jokerfeld – 0 Punkte",brelan:"Dreierpasch → Summe aller 5 Würfel",
+      psuit:"Kleine Straße → 25 Punkte",full:"Full House → 30 Punkte",
+      gsuit:"Große Straße → 35 Punkte",carre:"Vierling → 40 Punkte",
+      yams:"Kniffel → 50 Punkte",
+      plus:"Summe aller 5 Würfel (positiv)",minus:"Summe aller 5 Würfel (negativ)",less11:"Augensumme ≤ 10 → 20 Punkte",
     },
     lbl:{
       chance:"Chance",brelan:"Dreierpasch",psuit:"Kleine Straße",full:"Full House",
       gsuit:"Große Straße",carre:"Vierling",yams:"Kniffel 🎲",
       plus:"+",minus:"−",less11:"< 11",
     },
-    chanceSub:"0 Pkt — Notfeld",brelanSub:"Würfelsumme",
+    chanceSub:"0 Punkte – Jokerfeld",brelanSub:"Augensumme aller Würfel",
   },
 };
-function detectLang(){const l=(navigator.language||"fr").slice(0,2).toLowerCase();return L[l]?l:"fr";}
+function gameTitle(){return S.lang==="de"?"KNIFFEL":"YAM'S";}
 function t(k){return(L[S.lang]||L.fr)[k]||k;}
 function tRow(key){return(L[S.lang]||L.fr).rows[key]||"";}
 function tLbl(key){return(L[S.lang]||L.fr).lbl[key]||key;}
@@ -393,6 +393,7 @@ function installApp(){if(_prompt){_prompt.prompt();_prompt.userChoice.then(()=>{
 // ── ROUTING ───────────────────────────────────────────────────────────────
 function showView(v){S.view=v;render();}
 function render(){
+  document.getElementById("nav-logo").textContent="🎲 "+gameTitle();
   // Nav
   document.getElementById("nb-home").textContent=t("navHome");
   document.getElementById("nb-history").textContent=t("navHistory");
@@ -413,7 +414,7 @@ function vHome(){
   const nc=S.history.classic.length,np=S.history.custom.length;
   return`<div class="home-wrap">
     <span class="hero-dice" id="hero-dice">🎲</span>
-    <h1 class="htitle">YAM'S</h1>
+    <h1 class="htitle">${gameTitle()}</h1>
     <p class="hsub">${t("homeSub")}</p>
     <button class="btn bp" onclick="showView('setup')">${t("homeNew")}</button>
     ${_prompt?`<div style="margin-top:10px"><button class="btn bs" onclick="installApp()" style="font-size:13px">${t("installBtn")}</button></div>`:""}
