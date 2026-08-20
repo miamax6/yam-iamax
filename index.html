@@ -10,7 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="m.YAM.ax">
+<meta name="apple-mobile-web-app-title" content="yam.iamax">
 <meta name="theme-color" content="#e63946">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -391,11 +391,12 @@ window.addEventListener("appinstalled",()=>{_prompt=null;render();});
 function installApp(){if(_prompt){_prompt.prompt();_prompt.userChoice.then(()=>{_prompt=null;render();});}}
 
 // ── ROUTING ───────────────────────────────────────────────────────────────
+function gameTitle(){return S.lang==="de"?"KNIFFEL":"YAM'S";}
 function showView(v){S.view=v;render();}
 function render(){
-  document.getElementById("nav-logo").textContent="🎲 "+gameTitle();
   // Nav
-  document.getElementById("nav-logo").textContent="🎲 "+gameTitle();
+  const logo=document.querySelector(".logo");
+  if(logo)logo.textContent="🎲 "+gameTitle();
   document.getElementById("nb-home").textContent=t("navHome");
   document.getElementById("nb-history").textContent=t("navHistory");
   document.getElementById("nb-champion").textContent="🏆 "+t("navChamp");
@@ -642,7 +643,7 @@ async function shareRes(){
     ctx.font="700 17px 'Unbounded',Arial";ctx.fillStyle="rgba(255,255,255,.85)";ctx.fillText(p,144,y);
     ctx.textAlign="right";ctx.font="500 17px 'DM Mono',monospace";ctx.fillStyle="rgba(255,255,255,.45)";ctx.fillText(tot(S.scores[p])+" "+t("pts"),W-94,y);
   });
-  ctx.textAlign="center";ctx.font="12px 'DM Mono',monospace";ctx.fillStyle="rgba(255,255,255,.15)";ctx.fillText("m.yam.ax",W/2,H-14);
+  ctx.textAlign="center";ctx.font="12px 'DM Mono',monospace";ctx.fillStyle="rgba(255,255,255,.15)";ctx.fillText("yam.iamax",W/2,H-14);
   canvas.toBlob(blob=>{const file=new File([blob],"yams.png",{type:"image/png"});
     if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({title:"🎲 Yam's",text:S.winner+" gagne 🏆",files:[file]}).catch(()=>{});}
     else{const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="yams.png";a.click();URL.revokeObjectURL(u);}
