@@ -855,7 +855,8 @@ function createRoom(){
   const code=genCode();
   _sessionCode=code;
   updateSessionUI('connecting');
-  const peer=new Peer('yam-'+code,{host:'0.peerjs.com',port:443,secure:true});
+  // No custom host = PeerJS cloud server (most reliable)
+  const peer=new Peer('yam-'+code);
   _peer=peer;
   peer.on('open',()=>{updateSessionUI('open');render();});
   peer.on('connection',conn=>{
@@ -869,7 +870,7 @@ function createRoom(){
   });
   peer.on('error',err=>{
     if(err.type==='unavailable-id'){_peer=null;_sessionCode=null;createRoom();}
-    else updateSessionUI('error');
+    else{_peer=null;_sessionCode=null;updateSessionUI('error');}
   });
 }
 
@@ -914,11 +915,25 @@ function connectAsGuest(){
   if(code.length<4){const s=document.getElementById('join-status');if(s)s.textContent=t('joinTooShort');return;}
   const statusEl=document.getElementById('join-status');
   if(statusEl)statusEl.innerHTML=`<span style="color:var(--txt2)">${t('joinConnecting')}</span>`;
-  const peer=new Peer(undefined,{host:'0.peerjs.com',port:443,secure:true});
+  // No custom host = PeerJS cloud server
+  const peer=new Peer();
+  // Timeout if no connection after 10s
+  const timeout=setTimeout(()=>{
+    peer.destroy();
+    if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">${t('joinError')}</span>`;
+  },10000);
   peer.on('open',()=>{
     const conn=peer.connect('yam-'+code,{reliable:true});
     _guestConn=conn;
+    // Timeout for the actual P2P connection
+    const connTimeout=setTimeout(()=>{
+      if(!_isGuest){
+        peer.destroy();
+        if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">${t('joinError')}</span>`;
+      }
+    },8000);
     conn.on('open',()=>{
+      clearTimeout(timeout);clearTimeout(connTimeout);
       _isGuest=true;
       conn.send({type:'hello'});
       document.getElementById('join-modal')?.remove();
@@ -927,14 +942,15 @@ function connectAsGuest(){
       if(d.type==='state'){_guestState=d.data;renderGuest();}
     });
     conn.on('close',()=>{
-      _guestStatus='lost';
-      _isGuest=false;renderGuest();
+      _guestStatus='lost';_isGuest=false;renderGuest();
     });
     conn.on('error',()=>{
+      clearTimeout(connTimeout);
       if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">${t('joinError')}</span>`;
     });
   });
   peer.on('error',()=>{
+    clearTimeout(timeout);
     if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">${t('netError')}</span>`;
   });
 }
