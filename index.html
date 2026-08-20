@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -141,7 +142,12 @@ thead tr th.ca{background:#2a3a52!important;color:var(--blu)!important}
 .lang-menu.open{display:flex}
 .lang-opt{background:var(--sur);border:1px solid var(--brd);color:var(--txt2);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px}
 .lang-opt:hover{color:var(--txt);background:var(--sur2)}
-@media(max-width:600px){
+/* Online session */
+.session-box{background:rgba(91,155,213,.08);border:1px solid rgba(91,155,213,.25);border-radius:var(--r);padding:14px 16px;margin-top:14px}
+.session-code{font-family:'Unbounded',sans-serif;font-size:24px;letter-spacing:6px;color:var(--blu);text-align:center;padding:10px 0}
+.session-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(91,155,213,.12);border:1px solid rgba(91,155,213,.3);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--blu);font-weight:600}
+.guest-bar{background:#1a2236;border-bottom:1px solid var(--brd);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--blu)}
+.guest-readonly{background:rgba(230,57,70,.06);border:1px solid rgba(230,57,70,.2);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--red);font-weight:600}
   :root{--nav:50px}
   nav{padding:0 8px}.logo{font-size:12px;letter-spacing:1px}
   .nav-btn{font-size:11px;padding:5px 7px}
@@ -215,6 +221,21 @@ const L={
       plus:"+",minus:"−",less11:"< 11",
     },
     chanceSub:"0 pt — case de secours",brelanSub:"total des dés",
+    // P2P
+    joinBtn:"📱 Rejoindre une session",joinTitle:"📱 Rejoindre une session",
+    joinPlaceholder:"ABC123",joinHint:"Entre le code à 6 caractères donné par l'hôte.",
+    joinConnect:"Rejoindre",joinConnecting:"⏳ Connexion…",joinError:"❌ Code invalide ou hôte déconnecté",
+    joinTooShort:"⚠️ Code trop court",
+    shareTitle:"🌐 Partager en direct",shareActivate:"Activer",shareStop:"Arrêter",
+    shareHint:"Les spectateurs pourront suivre la partie en temps réel.",
+    shareCodeHint:"Code à partager avec les spectateurs :",
+    shareActive:(n)=>`✅ Session active · ${n} spectateur${n>1?"s":""}`,
+    guestBar:"👁 Mode spectateur",guestReadonly:"LECTURE SEULE",guestLeave:"Quitter",
+    guestWaiting:"En attente du démarrage de la partie…",
+    guestLostTitle:"Connexion perdue",guestLostMsg:"L'hôte s'est déconnecté.",
+    guestBack:"Retour à l'accueil",guestWaitData:"⏳ En attente des données…",
+    guestWin:(name)=>`🏆 ${name} remporte la partie !`,
+    netError:"❌ Erreur réseau",sessionActive:"✅ Session active",sessionConnecting:"⏳ Connexion…",sessionError:"❌ Erreur réseau",
   },
   en:{
     navHome:"Home",navHistory:"History",navChamp:"Champion",navResume:"● In progress",
@@ -255,6 +276,21 @@ const L={
       plus:"+",minus:"−",less11:"< 11",
     },
     chanceSub:"0 pts — backup slot",brelanSub:"sum of dice",
+    // P2P
+    joinBtn:"📱 Join a session",joinTitle:"📱 Join a session",
+    joinPlaceholder:"ABC123",joinHint:"Enter the 6-character code given by the host.",
+    joinConnect:"Join",joinConnecting:"⏳ Connecting…",joinError:"❌ Invalid code or host disconnected",
+    joinTooShort:"⚠️ Code too short",
+    shareTitle:"🌐 Share live",shareActivate:"Enable",shareStop:"Stop",
+    shareHint:"Spectators will be able to follow the game in real time.",
+    shareCodeHint:"Share this code with spectators:",
+    shareActive:(n)=>`✅ Session active · ${n} spectator${n>1?"s":""}`,
+    guestBar:"👁 Spectator mode",guestReadonly:"READ ONLY",guestLeave:"Leave",
+    guestWaiting:"Waiting for the game to start…",
+    guestLostTitle:"Connection lost",guestLostMsg:"The host has disconnected.",
+    guestBack:"Back to home",guestWaitData:"⏳ Waiting for data…",
+    guestWin:(name)=>`🏆 ${name} wins the game!`,
+    netError:"❌ Network error",sessionActive:"✅ Session active",sessionConnecting:"⏳ Connecting…",sessionError:"❌ Network error",
   },
   de:{
     navHome:"Start",navHistory:"Partien",navChamp:"Bestenliste",navResume:"● Läuft noch",
@@ -295,6 +331,21 @@ const L={
       plus:"+",minus:"−",less11:"< 11",
     },
     chanceSub:"0 Punkte – Jokerfeld",brelanSub:"Augensumme aller Würfel",
+    // P2P
+    joinBtn:"📱 Session beitreten",joinTitle:"📱 Session beitreten",
+    joinPlaceholder:"ABC123",joinHint:"Gib den 6-stelligen Code des Gastgebers ein.",
+    joinConnect:"Beitreten",joinConnecting:"⏳ Verbinde…",joinError:"❌ Ungültiger Code oder Gastgeber getrennt",
+    joinTooShort:"⚠️ Code zu kurz",
+    shareTitle:"🌐 Live teilen",shareActivate:"Aktivieren",shareStop:"Stoppen",
+    shareHint:"Zuschauer können das Spiel in Echtzeit mitverfolgen.",
+    shareCodeHint:"Diesen Code an die Zuschauer weitergeben:",
+    shareActive:(n)=>`✅ Session aktiv · ${n} Zuschauer${n>1?"":""}`,
+    guestBar:"👁 Zuschauermodus",guestReadonly:"NUR LESEN",guestLeave:"Verlassen",
+    guestWaiting:"Warte auf den Spielstart…",
+    guestLostTitle:"Verbindung unterbrochen",guestLostMsg:"Der Gastgeber hat die Verbindung getrennt.",
+    guestBack:"Zurück zur Startseite",guestWaitData:"⏳ Warte auf Daten…",
+    guestWin:(name)=>`🏆 ${name} gewinnt das Spiel!`,
+    netError:"❌ Netzwerkfehler",sessionActive:"✅ Session aktiv",sessionConnecting:"⏳ Verbinde…",sessionError:"❌ Netzwerkfehler",
   },
 };
 function gameTitle(){return S.lang==="de"?"KNIFFEL":"YAM'S";}
@@ -419,6 +470,7 @@ function vHome(){
     <h1 class="htitle">${gameTitle()}</h1>
     <p class="hsub">${t("homeSub")}</p>
     <button class="btn bp" onclick="showView('setup')">${t("homeNew")}</button>
+    <button class="btn bs" onclick="showJoinUI()" style="margin-top:8px;font-size:13px">${t("joinBtn")}</button>
     ${_prompt?`<div style="margin-top:10px"><button class="btn bs" onclick="installApp()" style="font-size:13px">${t("installBtn")}</button></div>`:""}
     ${champ?`<div><div class="cbanner">👑 <strong>${x(champ.name)}</strong> — ${champ.score} ${t("pts")}</div></div>`:""}
     <p style="color:var(--txt2);font-size:13px;margin-top:14px">${nc} ${t(nc>1?"histGames":"histGame")} ${t("modeClassic")} · ${np} ${t("modeCustom")}</p>
@@ -462,6 +514,21 @@ function vSetup(){
       <button class="btn bs" onclick="showView('home')">${t("back")}</button>
       <button class="btn bp" onclick="startGame()" ${S.players.length<1?"disabled":""}>${t("play")} (${S.players.length})</button>
     </div>
+    ${S.players.length>0?`<div class="session-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:600;color:var(--blu)">${t("shareTitle")}</span>
+        ${_peer
+          ?`<button class="btn bs" onclick="stopSession()" style="font-size:12px;padding:5px 10px;color:var(--red)">${t("shareStop")}</button>`
+          :`<button class="btn bs" onclick="createRoom();render()" style="font-size:12px;padding:5px 10px">${t("shareActivate")}</button>`
+        }
+      </div>
+      ${_peer
+        ?`<p style="font-size:12px;color:var(--txt2);margin-bottom:8px">${t("shareCodeHint")}</p>
+           <div class="session-code">${_sessionCode||'…'}</div>
+           <div id="session-status" style="text-align:center;font-size:12px;margin-top:6px"><span style="color:var(--grn)">${t("shareActive")(_conns.length)}</span></div>`
+        :`<p style="font-size:12px;color:var(--txt2)">${t("shareHint")}</p>`
+      }
+    </div>`:``}
   </div>`;
 }
 function addP(){const n=S.nameInput.trim();if(!n||S.players.includes(n)||S.players.length>=8)return;S.players.push(n);S.nameInput="";render();}
@@ -471,7 +538,7 @@ function startGame(){
   if(!S.players.length)return;
   const ak=getAllKeys();
   S.scores={};S.players.forEach(p=>{S.scores[p]={};ak.forEach(k=>S.scores[p][k]=null);});
-  S.finished=false;S.winner=null;saveCur();showView("game");
+  S.finished=false;S.winner=null;saveCur();broadcast();showView("game");
 }
 
 // ── GAME ──────────────────────────────────────────────────────────────────
@@ -517,7 +584,11 @@ function vGame(){
 
   return`<div class="game-wrap">
     ${S.finished?celebOv():""}
-    <div class="tscroll"><table>
+    ${_peer?`<div style="background:#1a2236;border-bottom:1px solid var(--brd);padding:6px 14px;display:flex;align-items:center;justify-content:space-between;font-size:12px">
+      <span class="session-badge">🌐 ${_sessionCode}</span>
+      <span id="guest-count" style="color:var(--blu);">${_conns.length>0?`👤 ${_conns.length}`:''}</span>
+    </div>`:""}
+    <div class="tscroll" style="height:calc(100vh - var(--nav) - ${_peer?'80px':'48px'})"><table>
       <thead>
         ${turnRow}
         <tr class="sup-hdr"><th class="cl">${t("colPlayers")} ${badge}</th>${pCols}</tr>
@@ -545,13 +616,13 @@ function vGame(){
   </div>`;
 }
 
-function cycleD(p,key,face,max){const cur=S.scores[p][key];S.scores[p][key]=cur===null?face:cur===0?null:cur+face<=max?cur+face:0;saveCur();partialUpdate();}
-function setScore(p,key,val){S.scores[p][key]=val===""?null:(parseInt(val)||0);saveCur();partialUpdate();}
+function cycleD(p,key,face,max){const cur=S.scores[p][key];S.scores[p][key]=cur===null?face:cur===0?null:cur+face<=max?cur+face:0;saveCur();broadcast();partialUpdate();}
+function setScore(p,key,val){S.scores[p][key]=val===""?null:(parseInt(val)||0);saveCur();broadcast();partialUpdate();}
 function togChk(p,key){
   const row=getLower().find(r=>r.key===key),cur=S.scores[p][key];
   if(row?.chance)S.scores[p][key]=cur===null?0:null;
   else S.scores[p][key]=cur===null?row.pts:cur===row.pts?0:null;
-  saveCur();partialUpdate();
+  saveCur();broadcast();partialUpdate();
 }
 
 function partialUpdate(){
@@ -594,7 +665,7 @@ function finishGame(){
   S.winner=[...S.players].sort((a,b)=>totals[b]-totals[a])[0];
   S.finished=true;
   S.history[S.mode].unshift({id:Date.now(),date:new Date().toLocaleDateString(),players:[...S.players],totals,winner:S.winner});
-  saveHist();clearCur();render();
+  saveHist();clearCur();broadcast();render();
 }
 function quitGame(){if(S.finished||confirm(t("confirmQuit"))){clearCur();S.players=[];S.scores={};S.finished=false;S.winner=null;showView("home");}}
 
@@ -753,7 +824,206 @@ function vChamp(){
   </div>`;
 }
 
-// ── UTILS ─────────────────────────────────────────────────────────────────
+// ── PEER-TO-PEER ──────────────────────────────────────────────────────────
+let _peer=null, _conns=[], _guestConn=null, _sessionCode=null;
+let _isGuest=false, _guestState=null, _guestStatus="";
+let _onlineMode=false; // toggle in setup
+
+function genCode(){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join('');
+}
+
+function getShareState(){
+  return{view:S.view,mode:S.mode,lang:S.lang,players:S.players,scores:JSON.parse(JSON.stringify(S.scores)),finished:S.finished,winner:S.winner};
+}
+
+function broadcast(){
+  if(!_peer||!_conns.length)return;
+  const d={type:'state',data:getShareState()};
+  _conns.forEach(c=>{try{c.send(d);}catch{}});
+  updateGuestCount();
+}
+
+function updateGuestCount(){
+  const el=document.getElementById('guest-count');
+  if(el)el.textContent=_conns.length>0?`👤 ${_conns.length}`:'';
+}
+
+function createRoom(){
+  if(_peer)return;
+  const code=genCode();
+  _sessionCode=code;
+  updateSessionUI('connecting');
+  const peer=new Peer('yam-'+code,{host:'0.peerjs.com',port:443,secure:true});
+  _peer=peer;
+  peer.on('open',()=>{updateSessionUI('open');render();});
+  peer.on('connection',conn=>{
+    conn.on('open',()=>{
+      _conns.push(conn);
+      conn.send({type:'state',data:getShareState()});
+      updateGuestCount();render();
+      conn.on('data',d=>{if(d.type==='hello')conn.send({type:'state',data:getShareState()});});
+      conn.on('close',()=>{_conns=_conns.filter(c=>c!==conn);updateGuestCount();render();});
+    });
+  });
+  peer.on('error',err=>{
+    if(err.type==='unavailable-id'){_peer=null;_sessionCode=null;createRoom();}
+    else updateSessionUI('error');
+  });
+}
+
+function stopSession(){
+  if(_peer){_peer.destroy();_peer=null;}
+  _conns=[];_sessionCode=null;_onlineMode=false;render();
+}
+
+function updateSessionUI(status){
+  const el=document.getElementById('session-status');
+  if(!el)return;
+  if(status==='connecting')el.innerHTML=`<span style="color:var(--txt2)">⏳ Connexion…</span>`;
+  else if(status==='open')el.innerHTML=`<span style="color:var(--grn)">✅ Session active</span>`;
+  else if(status==='error')el.innerHTML=`<span style="color:var(--red)">❌ Erreur réseau</span>`;
+}
+
+// GUEST
+function showJoinUI(){
+  const existing=document.getElementById('join-modal');if(existing)existing.remove();
+  const modal=document.createElement('div');modal.id='join-modal';modal.className='overlay';
+  modal.onclick=e=>{if(e.target===modal)modal.remove();};
+  modal.innerHTML=`<div class="mbox">
+    <div class="mhead">
+      <span class="stitle" style="margin:0">${t("joinTitle")}</span>
+      <button class="mclose" onclick="document.getElementById('join-modal').remove()">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:14px">${t("joinHint")}</p>
+    <input id="join-code" class="ifield" type="text" placeholder="${t("joinPlaceholder")}" maxlength="6"
+      style="text-transform:uppercase;letter-spacing:4px;font-size:20px;text-align:center;width:100%;margin-bottom:12px"
+      oninput="this.value=this.value.toUpperCase()">
+    <div id="join-status" style="min-height:20px;font-size:13px;margin-bottom:12px;text-align:center"></div>
+    <button class="btn bp" style="width:100%;justify-content:center" onclick="connectAsGuest()">${t("joinConnect")}</button>
+  </div>`;
+  document.body.appendChild(modal);
+  setTimeout(()=>document.getElementById('join-code')?.focus(),100);
+}
+
+function connectAsGuest(){
+  const input=document.getElementById('join-code');
+  if(!input)return;
+  const code=input.value.trim().toUpperCase();
+  if(code.length<4){const s=document.getElementById('join-status');if(s)s.textContent=t('joinTooShort');return;}
+  const statusEl=document.getElementById('join-status');
+  if(statusEl)statusEl.innerHTML=`<span style="color:var(--txt2)">${t('joinConnecting')}</span>`;
+  const peer=new Peer(undefined,{host:'0.peerjs.com',port:443,secure:true});
+  peer.on('open',()=>{
+    const conn=peer.connect('yam-'+code,{reliable:true});
+    _guestConn=conn;
+    conn.on('open',()=>{
+      _isGuest=true;
+      conn.send({type:'hello'});
+      document.getElementById('join-modal')?.remove();
+    });
+    conn.on('data',d=>{
+      if(d.type==='state'){_guestState=d.data;renderGuest();}
+    });
+    conn.on('close',()=>{
+      _guestStatus='lost';
+      _isGuest=false;renderGuest();
+    });
+    conn.on('error',()=>{
+      if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">${t('joinError')}</span>`;
+    });
+  });
+  peer.on('error',()=>{
+    if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">${t('netError')}</span>`;
+  });
+}
+
+function disconnectGuest(){
+  if(_guestConn){_guestConn.close();_guestConn=null;}
+  _isGuest=false;_guestState=null;_guestStatus="";showView('home');
+}
+
+function renderGuest(){
+  if(!_isGuest&&_guestStatus!=='lost'){showView('home');return;}
+  if(_guestStatus==='lost'){
+    document.getElementById('app').innerHTML=`<div style="text-align:center;padding:60px 20px">
+      <div style="font-size:48px;margin-bottom:16px">📡</div>
+      <h2 style="color:var(--red);font-family:'Unbounded',sans-serif;font-size:18px;margin-bottom:12px">${t("guestLostTitle")}</h2>
+      <p style="color:var(--txt2);margin-bottom:24px">${t("guestLostMsg")}</p>
+      <button class="btn bp" onclick="disconnectGuest()">${t("guestBack")}</button>
+    </div>`;return;
+  }
+  if(!_guestState){
+    document.getElementById('app').innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--txt2)">${t("guestWaitData")}</div>`;return;
+  }
+  const gs=_guestState;
+  if(gs.view!=='game'||!gs.players?.length){
+    document.getElementById('app').innerHTML=`<div style="text-align:center;padding:60px 20px">
+      <div style="font-size:48px;margin-bottom:16px">⏳</div>
+      <p style="color:var(--txt2);font-size:16px">${t("guestWaiting")}</p>
+      <button class="btn bs" style="margin-top:24px" onclick="disconnectGuest()">${t("guestLeave")}</button>
+    </div>`;return;
+  }
+  // Read-only game view
+  const PL=gs.players,N=PL.length,scores=gs.scores;
+  const LOWER_C=[{key:"chance",pts:0,fixed:true,chance:true},{key:"brelan",pts:null,fixed:false},{key:"psuit",pts:25,fixed:true},{key:"full",pts:30,fixed:true},{key:"gsuit",pts:35,fixed:true},{key:"carre",pts:40,fixed:true},{key:"yams",pts:50,fixed:true}];
+  const LOWER_P=[{key:"plus",pts:null,fixed:false},{key:"minus",pts:null,fixed:false},{key:"less11",pts:20,fixed:true},{key:"brelan",pts:null,fixed:false},{key:"psuit",pts:25,fixed:true},{key:"full",pts:30,fixed:true},{key:"gsuit",pts:35,fixed:true},{key:"carre",pts:40,fixed:true},{key:"yams",pts:50,fixed:true}];
+  const LOWER=(gs.mode==='classic'?LOWER_C:LOWER_P).map(r=>({...r,label:tLbl(r.key),desc:tRow(r.key)}));
+  const sumUg=sc=>UKEYS.reduce((s,k)=>s+(sc?.[k]??0),0);
+  const bong=sc=>sumUg(sc)>=63?37:0;
+  const sumLg=(sc,mode)=>(mode==='classic'?LOWER_C:LOWER_P).map(r=>r.key).reduce((s,k)=>s+(sc?.[k]??0),0);
+  const totg=sc=>sumUg(sc)+bong(sc)+sumLg(sc,gs.mode);
+  let maxT=-Infinity;PL.forEach(p=>{const v=totg(scores[p]);if(v>maxT)maxT=v;});
+
+  const pCols=PL.map(p=>{const lead=totg(scores[p])===maxT&&N>1;return`<th class="pcol${lead?" leader":""}" style="${lead?"color:var(--gld)":""}">${lead?"👑 ":""}${x(p)}</th>`;}).join("");
+
+  const upRows=UKEYS.map((key,i)=>`<tr>
+    <td class="tlbl cl" style="text-align:center;padding:4px 10px">${diceImg(i+1,32)}</td>
+    ${PL.map(p=>{const v=scores[p]?.[key];return`<td class="tc" style="font-family:'DM Mono',monospace">${v===0?"🚫":v===null?"":v}</td>`;}).join("")}</tr>`).join("");
+
+  const loRows=LOWER.map(row=>`<tr>
+    <td class="tlbl cl" style="padding:5px 10px">
+      <span style="display:block;font-size:13px;font-weight:500">${x(row.label)}</span>
+      ${row.pts&&!row.chance?`<span style="font-size:10px;color:var(--txt2)">${row.pts} pts</span>`:""}
+    </td>
+    ${PL.map(p=>{const v=scores[p]?.[row.key];
+      if(row.chance)return`<td class="tc">${v===0?"✖️":""}</td>`;
+      if(row.fixed){const ok=v===row.pts,bad=v===0;return`<td class="tc">${ok?"✅":bad?"🚫":""}</td>`;}
+      return`<td class="tc" style="font-family:'DM Mono',monospace">${v===null||v===undefined?"":v}</td>`;
+    }).join("")}</tr>`).join("");
+
+  const tCells=(fn)=>PL.map(p=>{const v=fn(scores[p]),lead=v===maxT&&N>1;return`<td class="tc${lead?" leader":""}" style="font-family:'DM Mono',monospace">${v}${lead?" 👑":""}</td>`;}).join("");
+
+  document.getElementById('app').innerHTML=`
+    <div class="guest-bar">
+      <span>${t("guestBar")}</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="guest-readonly">${t("guestReadonly")}</span>
+        <button class="btn bs" onclick="disconnectGuest()" style="font-size:12px;padding:5px 10px">${t("guestLeave")}</button>
+      </div>
+    </div>
+    <div class="tscroll" style="height:calc(100vh - var(--nav) - 44px)">
+      <table>
+        <thead>
+          ${gs.finished?`<tr class="turn-row"><th class="cl"></th><th colspan="${N}">${t("guestWin")(x(gs.winner))}</th></tr>`:""}
+          <tr class="sup-hdr"><th class="cl">${t("colPlayers")}</th>${pCols}</tr>
+        </thead>
+        <tbody>
+          ${upRows}
+          <tr class="r-tot"><td class="tlbl cl" style="font-size:11px;color:var(--blu)">${t("totSup")}</td>${tCells(sumUg)}</tr>
+          <tr class="r-bon"><td class="tlbl cl" style="font-size:11px;color:var(--txt2)">${t("bonus63")}</td>${PL.map(p=>`<td class="tc" style="font-family:'DM Mono',monospace">${bong(scores[p])}</td>`).join("")}</tr>
+          <tr class="r-tot"><td class="tlbl cl" style="font-size:11px;color:var(--txt2)">${t("plusBonus")}</td>${PL.map(p=>`<td class="tc" style="font-family:'DM Mono',monospace">${sumUg(scores[p])+bong(scores[p])}</td>`).join("")}</tr>
+          <tr class="inf-hdr"><th class="cl">${t("inferior")}</th>${PL.map(()=>`<th></th>`).join("")}</tr>
+          ${loRows}
+          <tr class="r-tot"><td class="tlbl cl" style="font-size:11px;color:var(--pur)">${t("totInf")}</td>${tCells(sc=>sumLg(sc,gs.mode))}</tr>
+          <tr class="r-grand"><td class="tlbl cl" style="font-weight:900;font-size:13px">${t("total")}</td>${tCells(totg)}</tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+
 function x(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
 // ── PWA ───────────────────────────────────────────────────────────────────
