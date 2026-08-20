@@ -261,8 +261,8 @@ const L={
     homeSub:"Spielzettel · Spielverlauf · Rangliste",homeNew:"✦ Neues Spiel",
     installBtn:"📲 App installieren",
     modeTitle:"Spielmodus",modeClassic:"🏛 Klassisch",modeCustom:"⚡ Hausregeln",
-    modeClassicDesc:"Standardregeln: Chance, Dreierpasch, Kleine/Große Straße, Full House, Vierling, Kniffel.",
-    modeCustomDesc:"Hausregeln: +, −, <11, Dreierpasch, Kleine/Große Straße, Full House, Vierling, Kniffel.",
+    modeClassicDesc:"Standardregeln: Chance, Dreierpasch, Kleine/Große Straße, Full House, Viererpasch, Kniffel.",
+    modeCustomDesc:"Hausregeln: +, −, <11, Dreierpasch, Kleine/Große Straße, Full House, Viererpasch, Kniffel.",
     playersTitle:"Spieler & Zugreihenfolge",playerOrder:"Zugreihenfolge festlegen ↑↓",
     playerPh:"Name…",playerNone:"Noch keine Spieler eingetragen",
     back:"← Zurück",play:"Spielen",
@@ -285,13 +285,13 @@ const L={
       fours:"Summe aller Vieren",fives:"Summe aller Fünfen",sixes:"Summe aller Sechsen",
       chance:"Jokerfeld – 0 Punkte",brelan:"Dreierpasch → Summe aller 5 Würfel",
       psuit:"Kleine Straße → 25 Punkte",full:"Full House → 30 Punkte",
-      gsuit:"Große Straße → 35 Punkte",carre:"Vierling → 40 Punkte",
+      gsuit:"Große Straße → 35 Punkte",carre:"Viererpasch → 40 Punkte",
       yams:"Kniffel → 50 Punkte",
       plus:"Summe aller 5 Würfel (positiv)",minus:"Summe aller 5 Würfel (negativ)",less11:"Augensumme ≤ 10 → 20 Punkte",
     },
     lbl:{
       chance:"Chance",brelan:"Dreierpasch",psuit:"Kleine Straße",full:"Full House",
-      gsuit:"Große Straße",carre:"Vierling",yams:"Kniffel 🎲",
+      gsuit:"Große Straße",carre:"Viererpasch",yams:"Kniffel 🎲",
       plus:"+",minus:"−",less11:"< 11",
     },
     chanceSub:"0 Punkte – Jokerfeld",brelanSub:"Augensumme aller Würfel",
@@ -501,7 +501,7 @@ function vGame(){
     return`<td class="tc${a?" ca":""}${lead?" leader":""}" data-tot="${k}" data-p="${x(p)}" style="font-family:'DM Mono',monospace">${v}${lead?" 👑":""}</td>`;}).join("");
 
   const upRows=UKEYS.map((key,i)=>`<tr>
-    <td class="tlbl cl" onclick="showTip(tLbl('${key}'),tRow('${key}'))" style="text-align:center;padding:4px 10px">${diceImg(i+1,32)}</td>
+    <td class="tlbl cl" onclick="showTip('${ULABELS[i]}',tRow('${key}'))" style="text-align:center;padding:4px 10px">${diceImg(i+1,32)}</td>
     ${PL.map(p=>dBtn(p,{key,label:ULABELS[i],desc:""})).join("")}</tr>`).join("");
 
   const loRows=LOWER.map(row=>`<tr>
