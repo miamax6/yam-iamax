@@ -527,7 +527,9 @@ function vSetup(){
            <div style="text-align:center;font-size:12px;margin-top:6px;color:var(--grn)">${t("shareActive")(_conns.length)}</div>`
         :_sessionCode
           ?`<div style="text-align:center;font-size:13px;color:var(--txt2);padding:10px 0">⏳ ${t("sessionConnecting")}</div>`
-          :`<p style="font-size:12px;color:var(--txt2)">${t("shareHint")}</p>`
+          :_sessionError
+            ?`<div style="text-align:center;font-size:13px;color:var(--red);padding:10px 0">❌ ${t("sessionError")}</div>`
+            :`<p style="font-size:12px;color:var(--txt2)">${t("shareHint")}</p>`
       }
     </div>`:``}
   </div>`;
@@ -831,6 +833,7 @@ let _isGuest=false, _guestState=null, _guestStatus="";
 let _onlineMode=false;
 let _peerOpen=false;
 let _peerPing=null;
+let _sessionError=false;
 
 function genCode(){
   const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -867,24 +870,24 @@ function createRoom(attempt=0){
   const code=attempt===0?genCode():_sessionCode;
   _sessionCode=code;
   _peerOpen=false;
-  render(); // affiche "Connexion…" tout de suite
+  if(attempt===0)render();
   const peer=new Peer('yam-'+code, PEER_CFG);
   _peer=peer;
   const timeout=setTimeout(()=>{
     if(!_peerOpen){
       peer.destroy();_peer=null;_peerOpen=false;
       if(attempt<2){setTimeout(()=>createRoom(attempt+1),2000);}
-      else{_sessionCode=null;render();}
+      else{_sessionCode=null;_sessionError=true;render();}
     }
   },15000); // 15s pour laisser Render se réveiller
   peer.on('open',()=>{
     clearTimeout(timeout);
-    _peerOpen=true;
+    _peerOpen=true;_sessionError=false;
     render();
     // Ping toutes les 25s pour garder la connexion Render vivante
     _peerPing=setInterval(()=>{
       if(_peer&&!_peer.destroyed&&_peer.socket){
-        try{_peer.socket.send(JSON.stringify({type:'HEARTBEAT'}));}catch{}
+        try{_peer.socket._socket?.ping();}catch{}
       }
     },25000);
   });
@@ -905,7 +908,7 @@ function createRoom(attempt=0){
     clearTimeout(timeout);
     if(err.type==='unavailable-id'){_peer=null;_peerOpen=false;_sessionCode=null;createRoom(0);}
     else if(attempt<2){_peer=null;_peerOpen=false;setTimeout(()=>createRoom(attempt+1),2000);}
-    else{_peer=null;_peerOpen=false;_sessionCode=null;render();}
+    else{_peer=null;_peerOpen=false;_sessionCode=null;_sessionError=true;render();}
   });
 }
 
