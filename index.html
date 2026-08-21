@@ -850,7 +850,7 @@ function updateGuestCount(){
 }
 
 const PEER_CFG={
-  host:'yam-iamax.onrender.com', port:443, secure:true, path:'/yam',
+  host:'yam-iamax.onrender.com', port:443, secure:true, path:'/peerjs',
   config:{iceServers:[
     {urls:'stun:stun.l.google.com:19302'},
     {urls:'stun:stun1.l.google.com:19302'},
@@ -863,16 +863,20 @@ function createRoom(attempt=0){
   const code=attempt===0?genCode():_sessionCode;
   _sessionCode=code;
   updateSessionUI('connecting');
+  let peerOpen=false; // flag pour savoir si la connexion a déjà été établie
   const peer=new Peer('yam-'+code, PEER_CFG);
   _peer=peer;
   const timeout=setTimeout(()=>{
-    if(!peer.open){peer.destroy();_peer=null;
-      if(attempt<2){setTimeout(()=>createRoom(attempt+1),1500);}
+    if(!peerOpen){
+      peer.destroy();_peer=null;
+      if(attempt<2){setTimeout(()=>createRoom(attempt+1),2000);}
       else{_sessionCode=null;updateSessionUI('error');}
     }
-  },8000);
+  },10000);
   peer.on('open',()=>{
-    clearTimeout(timeout);updateSessionUI('open');render();
+    clearTimeout(timeout);
+    peerOpen=true;
+    updateSessionUI('open');render();
   });
   peer.on('connection',conn=>{
     conn.on('open',()=>{
@@ -884,9 +888,18 @@ function createRoom(attempt=0){
     });
   });
   peer.on('error',err=>{
+    // Si déjà connecté, on ignore les erreurs non fatales (guest avec mauvais code, etc.)
+    if(peerOpen){
+      if(err.type==='peer-unavailable')return; // guest avec mauvais code → pas grave
+      if(err.type==='network'||err.type==='socket-error'||err.type==='socket-closed'){
+        updateSessionUI('error'); // signale mais ne détruit pas
+      }
+      return;
+    }
+    // Erreurs avant ouverture → retry
     clearTimeout(timeout);
     if(err.type==='unavailable-id'){_peer=null;_sessionCode=null;createRoom(0);}
-    else if(attempt<2){_peer=null;setTimeout(()=>createRoom(attempt+1),1500);}
+    else if(attempt<2){_peer=null;setTimeout(()=>createRoom(attempt+1),2000);}
     else{_peer=null;_sessionCode=null;updateSessionUI('error');}
   });
 }
