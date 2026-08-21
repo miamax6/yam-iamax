@@ -862,25 +862,43 @@ function updateGuestCount(){
   if(el)el.textContent=_conns.length>0?`👤 ${_conns.length}`:'';
 }
 
-const PEER_CFG={
-  host:'yam-iamax.onrender.com', port:443, secure:true, path:'/yam',
-  config:{iceServers:[
-    {urls:'stun:stun.l.google.com:19302'},
-    {urls:'stun:stun1.l.google.com:19302'},
-    // TURN = relais obligatoire quand les 2 appareils sont derriere du CGNAT (4G)
-    {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
-    {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
-    {urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
-  ],iceCandidatePoolSize:4}
-};
+const PEER_SRV={host:'yam-iamax.onrender.com', port:443, secure:true, path:'/yam'};
 
-function createRoom(attempt=0){
+// Cle API Metered : renvoie des identifiants TURN frais + les relais les plus proches
+const TURN_API='https://miamax6.metered.live/api/v1/turn/credentials?apiKey=J4xq9yjN6PeMvIJaK_GNcJXUJtov073x-aHQ_ik6pTpSrNq6';
+
+// Repli STUN si l'API TURN est injoignable (connexion directe seulement)
+const ICE_FALLBACK=[
+  {urls:'stun:stun.l.google.com:19302'},
+  {urls:'stun:stun1.l.google.com:19302'},
+];
+
+let _iceCache=null;
+async function getIce(){
+  if(_iceCache)return _iceCache;
+  try{
+    const r=await fetch(TURN_API);
+    const arr=await r.json();
+    if(Array.isArray(arr)&&arr.length){
+      _iceCache=arr;
+      console.log('[ICE] '+arr.length+' serveurs recuperes (dont TURN)');
+      return arr;
+    }
+  }catch(e){ console.warn('[ICE] API TURN injoignable, repli STUN seul',e); }
+  _iceCache=ICE_FALLBACK;
+  return ICE_FALLBACK;
+}
+async function peerCfg(){
+  return {...PEER_SRV, config:{iceServers:await getIce(), iceCandidatePoolSize:4}};
+}
+
+async function createRoom(attempt=0){
   if(_peer)return;
   const code=attempt===0?genCode():_sessionCode;
   _sessionCode=code;
   _peerOpen=false;
   if(attempt===0)render();
-  const peer=new Peer('yam-'+code, PEER_CFG);
+  const peer=new Peer('yam-'+code, await peerCfg());
   _peer=peer;
   const timeout=setTimeout(()=>{
     if(!_peerOpen){
@@ -956,7 +974,7 @@ function showJoinUI(){
   setTimeout(()=>document.getElementById('join-code')?.focus(),100);
 }
 
-function connectAsGuest(){
+async function connectAsGuest(){
   const input=document.getElementById('join-code');
   if(!input)return;
   const code=input.value.trim().toUpperCase();
@@ -964,7 +982,7 @@ function connectAsGuest(){
   const statusEl=document.getElementById('join-status');
   if(statusEl)statusEl.innerHTML=`<span style="color:var(--txt2)">${t('joinConnecting')}</span>`;
 
-  const peer=new Peer(undefined, PEER_CFG);
+  const peer=new Peer(undefined, await peerCfg());
   // Timeout if no connection after 10s
   const timeout=setTimeout(()=>{
     peer.destroy();
