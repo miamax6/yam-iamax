@@ -867,8 +867,11 @@ const PEER_CFG={
   config:{iceServers:[
     {urls:'stun:stun.l.google.com:19302'},
     {urls:'stun:stun1.l.google.com:19302'},
-    {urls:'stun:stun2.l.google.com:19302'},
-  ]}
+    // TURN = relais obligatoire quand les 2 appareils sont derriere du CGNAT (4G)
+    {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+    {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
+    {urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
+  ],iceCandidatePoolSize:4}
 };
 
 function createRoom(attempt=0){
@@ -974,9 +977,9 @@ function connectAsGuest(){
     const connTimeout=setTimeout(()=>{
       if(!_isGuest){
         peer.destroy();
-        if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">${t('joinError')}</span>`;
+        if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">❌ P2P impossible (NAT/pare-feu) — code trouve mais le lien direct echoue</span>`;
       }
-    },8000);
+    },15000);
     conn.on('open',()=>{
       clearTimeout(timeout);clearTimeout(connTimeout);
       _isGuest=true;
@@ -989,15 +992,15 @@ function connectAsGuest(){
     conn.on('close',()=>{
       _guestStatus='lost';_isGuest=false;renderGuest();
     });
-    conn.on('error',()=>{
+    conn.on('error',(e)=>{
       clearTimeout(connTimeout);
-      if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">${t('joinError')}</span>`;
+      if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">❌ Erreur connexion: ${e&&e.type?e.type:'inconnue'}</span>`;
     });
   });
   peer.on('error', err => {
     clearTimeout(timeout);
     const msg = {
-      'peer-unavailable': t('joinError'),       // code invalide
+      'peer-unavailable': '❌ Code introuvable sur le serveur (hôte absent)',
       'network':          '❌ Serveur inaccessible (network)',
       'socket-error':     '❌ Erreur socket (socket-error)',
       'socket-closed':    '❌ Socket fermée (socket-closed)',
