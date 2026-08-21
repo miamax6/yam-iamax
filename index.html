@@ -829,7 +829,8 @@ function vChamp(){
 let _peer=null, _conns=[], _guestConn=null, _sessionCode=null;
 let _isGuest=false, _guestState=null, _guestStatus="";
 let _onlineMode=false;
-let _peerOpen=false; // true uniquement quand le serveur a confirmé la connexion
+let _peerOpen=false;
+let _peerPing=null;
 
 function genCode(){
   const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -880,6 +881,12 @@ function createRoom(attempt=0){
     clearTimeout(timeout);
     _peerOpen=true;
     render();
+    // Ping toutes les 25s pour garder la connexion Render vivante
+    _peerPing=setInterval(()=>{
+      if(_peer&&!_peer.destroyed&&_peer.socket){
+        try{_peer.socket.send(JSON.stringify({type:'HEARTBEAT'}));}catch{}
+      }
+    },25000);
   });
   peer.on('connection',conn=>{
     conn.on('open',()=>{
@@ -903,6 +910,7 @@ function createRoom(attempt=0){
 }
 
 function stopSession(){
+  if(_peerPing){clearInterval(_peerPing);_peerPing=null;}
   if(_peer){_peer.destroy();_peer=null;}
   _conns=[];_sessionCode=null;_peerOpen=false;render();
 }
