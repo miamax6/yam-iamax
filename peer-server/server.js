@@ -1,26 +1,11 @@
-const express = require('express');
-const { ExpressPeerServer } = require('peer');
+const { PeerServer } = require('peer');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Health check
-app.get('/', (req, res) => res.send('yam.iamax PeerJS server — OK'));
-
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const server = PeerServer({
+  port: process.env.PORT || 3000,
+  path: '/yam'
 });
 
-// Path simplifié : ExpressPeerServer monté à /peerjs, path interne = /
-const peerServer = ExpressPeerServer(server, {
-  allow_discovery: false,
-});
+server.on('connection', () => console.log('peer connected'));
+server.on('disconnect', () => console.log('peer disconnected'));
 
-app.use('/peerjs', peerServer);
-
-peerServer.on('connection', client => {
-  console.log(`Client connecté : ${client.getId()}`);
-});
-peerServer.on('disconnect', client => {
-  console.log(`Client déconnecté : ${client.getId()}`);
-});
+console.log(`PeerJS server on port ${process.env.PORT || 3000}`);
