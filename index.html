@@ -33,6 +33,8 @@ nav{background:var(--sur);border-bottom:1px solid var(--brd);padding:0 16px;disp
 .nav-btn.active{background:rgba(230,57,70,.12);color:var(--red);font-weight:700}
 .resume-btn{color:var(--grn)!important;display:none}
 .resume-btn.on{display:inline-block!important}
+.live-btn{color:var(--blu)!important;display:none}
+.live-btn.on{display:inline-block!important}
 main{max-width:980px;margin:0 auto;padding:24px 12px 48px}
 .btn{font-family:inherit;font-weight:700;font-size:14px;padding:10px 20px;border-radius:10px;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
 .bp{background:var(--red);color:#fff}.bp:hover{background:#c1121f}.bp:disabled{opacity:.4;cursor:not-allowed}
@@ -171,6 +173,7 @@ thead tr th.ca{background:#2a3a52!important;color:var(--blu)!important}
     <button class="nav-btn" id="nb-history"  onclick="showView('history')"></button>
     <button class="nav-btn" id="nb-champion" onclick="showView('champion')"></button>
     <button class="nav-btn resume-btn" id="nb-resume" onclick="showView('game')"></button>
+    <button class="nav-btn live-btn" id="nb-live" onclick="showView('guest')"></button>
   </div>
 </nav>
 <main id="app"></main>
@@ -183,7 +186,7 @@ thead tr th.ca{background:#2a3a52!important;color:var(--blu)!important}
 // ── I18N ──────────────────────────────────────────────────────────────────
 const L={
   fr:{
-    navHome:"Accueil",navHistory:"Historique",navChamp:"Champion",navResume:"● En cours",
+    navLive:"👁 En direct",navHome:"Accueil",navGuest:"👁 Partie",navHistory:"Historique",navChamp:"Champion",navResume:"● En cours",
     homeSub:"Feuille de score · Historique · Classements",homeNew:"✦ Nouvelle partie",
     installBtn:"📲 Installer l'app",
     modeTitle:"Mode de jeu",modeClassic:"🏛 Classique",modeCustom:"⚡ Perso",
@@ -238,7 +241,7 @@ const L={
     netError:"❌ Erreur réseau",sessionActive:"✅ Session active",sessionConnecting:"⏳ Connexion…",sessionError:"❌ Erreur réseau",
   },
   en:{
-    navHome:"Home",navHistory:"History",navChamp:"Champion",navResume:"● In progress",
+    navLive:"👁 Live",navHome:"Home",navGuest:"👁 Game",navHistory:"History",navChamp:"Champion",navResume:"● In progress",
     homeSub:"Scoresheet · History · Rankings",homeNew:"✦ New game",
     installBtn:"📲 Install app",
     modeTitle:"Game mode",modeClassic:"🏛 Classic",modeCustom:"⚡ Custom",
@@ -293,7 +296,7 @@ const L={
     netError:"❌ Network error",sessionActive:"✅ Session active",sessionConnecting:"⏳ Connecting…",sessionError:"❌ Network error",
   },
   de:{
-    navHome:"Start",navHistory:"Partien",navChamp:"Bestenliste",navResume:"● Läuft noch",
+    navLive:"👁 Live",navHome:"Start",navGuest:"👁 Spiel",navHistory:"Partien",navChamp:"Bestenliste",navResume:"● Läuft noch",
     homeSub:"Spielzettel · Spielverlauf · Rangliste",homeNew:"✦ Neues Spiel",
     installBtn:"📲 App installieren",
     modeTitle:"Spielmodus",modeClassic:"🏛 Klassisch",modeCustom:"⚡ Hausregeln",
@@ -457,9 +460,12 @@ function render(){
   document.getElementById("nb-history").textContent=t("navHistory");
   document.getElementById("nb-champion").textContent="🏆 "+t("navChamp");
   document.getElementById("nb-resume").textContent=t("navResume");
+  document.getElementById("nb-live").textContent=t("navLive");
   ["home","history","champion"].forEach(v=>{const b=document.getElementById("nb-"+v);if(b)b.classList.toggle("active",S.view===v);});
   document.getElementById("nb-resume").classList.toggle("on",S.players.length>0&&!S.finished&&S.view!=="game");
+  document.getElementById("nb-live").classList.toggle("on",_isGuest&&S.view!=="guest");
   updateLangBtn();
+  if(S.view==="guest"){renderGuest();return;}
   const fns={home:vHome,setup:vSetup,game:vGame,history:vHist,champion:vChamp};
   document.getElementById("app").innerHTML=(fns[S.view]||vHome)();
   if(S.view==="home"){const el=document.getElementById("hero-dice");if(el)el.onclick=rollDice;}
@@ -532,9 +538,9 @@ function vSetup(){
            <div class="session-code">${_sessionCode}</div>
            <div style="text-align:center;font-size:12px;margin-top:6px;color:var(--grn)">${t("shareActive")(_conns.length)}</div>`
         :_sessionCode
-          ?`<div style="text-align:center;font-size:13px;color:var(--txt2);padding:10px 0">⏳ ${t("sessionConnecting")}</div>`
+          ?`<div style="text-align:center;font-size:13px;color:var(--txt2);padding:10px 0">${t("sessionConnecting")}</div>`
           :_sessionError
-            ?`<div style="text-align:center;font-size:13px;color:var(--red);padding:10px 0">❌ ${t("sessionError")}</div>`
+            ?`<div style="text-align:center;font-size:13px;color:var(--red);padding:10px 0">${t("sessionError")}</div>`
             :`<p style="font-size:12px;color:var(--txt2)">${t("shareHint")}</p>`
       }
     </div>`:``}
@@ -1003,12 +1009,19 @@ async function connectAsGuest(){
       _isGuest=true;
       conn.send({type:'hello'});
       document.getElementById('join-modal')?.remove();
+      S.view='guest';render();
     });
     conn.on('data',d=>{
-      if(d.type==='state'){_guestState=d.data;renderGuest();}
+      if(d.type==='state'){
+        _guestState=d.data;
+        // ne pas arracher le spectateur de l'onglet ou il se trouve
+        if(S.view==='guest')renderGuest();
+        else document.getElementById('nb-live')?.classList.add('on');
+      }
     });
     conn.on('close',()=>{
-      _guestStatus='lost';_isGuest=false;renderGuest();
+      _guestStatus='lost';_isGuest=false;
+      S.view='guest';render();
     });
     conn.on('error',(e)=>{
       clearTimeout(connTimeout);
@@ -1035,7 +1048,7 @@ function disconnectGuest(){
 }
 
 function renderGuest(){
-  if(!_isGuest&&_guestStatus!=='lost'){showView('home');return;}
+  if(!_isGuest&&_guestStatus!=='lost'){S.view='home';render();return;}
   if(_guestStatus==='lost'){
     document.getElementById('app').innerHTML=`<div style="text-align:center;padding:60px 20px">
       <div style="font-size:48px;margin-bottom:16px">📡</div>
