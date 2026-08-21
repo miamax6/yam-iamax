@@ -977,9 +977,17 @@ function connectAsGuest(){
       if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">${t('joinError')}</span>`;
     });
   });
-  peer.on('error',()=>{
+  peer.on('error', err => {
     clearTimeout(timeout);
-    if(statusEl)statusEl.innerHTML=`<span style="color:var(--red)">${t('netError')}</span>`;
+    const msg = {
+      'peer-unavailable': t('joinError'),       // code invalide
+      'network':          '❌ Serveur inaccessible (network)',
+      'socket-error':     '❌ Erreur socket (socket-error)',
+      'socket-closed':    '❌ Socket fermée (socket-closed)',
+      'unavailable-id':   '❌ ID indisponible (unavailable-id)',
+      'server-error':     '❌ Erreur serveur (server-error)',
+    }[err.type] || `❌ ${err.type}`;
+    if(statusEl) statusEl.innerHTML=`<span style="color:var(--red)">${msg}</span>`;
   });
 }
 
