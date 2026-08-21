@@ -348,6 +348,7 @@ const L={
     netError:"❌ Netzwerkfehler",sessionActive:"✅ Session aktiv",sessionConnecting:"⏳ Verbinde…",sessionError:"❌ Netzwerkfehler",
   },
 };
+function detectLang(){const l=(navigator.language||"fr").slice(0,2).toLowerCase();return L[l]?l:"fr";}
 function t(k){return(L[S.lang]||L.fr)[k]||k;}
 function tRow(key){return(L[S.lang]||L.fr).rows[key]||"";}
 function tLbl(key){return(L[S.lang]||L.fr).lbl[key]||key;}
@@ -398,15 +399,20 @@ function getAllKeys(){return[...UKEYS,...getLower().map(r=>r.key)];}
 const S={view:"home",mode:"classic",lang:"fr",players:[],scores:{},finished:false,winner:null,nameInput:"",history:{classic:[],custom:[]},histView:"classic"};
 
 // ── PERSISTENCE ───────────────────────────────────────────────────────────
+// localStorage sécurisé — ne crashe jamais si bloqué (Brave Shields, nav privée)
+function lsGet(k){try{return localStorage.getItem(k);}catch{return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch{}}
+function lsDel(k){try{localStorage.removeItem(k);}catch{}}
+
 function loadAll(){
-  S.lang=localStorage.getItem("yams:lang")||detectLang();
-  try{const r=localStorage.getItem("yams:h:classic");if(r)S.history.classic=JSON.parse(r);}catch{}
-  try{const r=localStorage.getItem("yams:h:custom"); if(r)S.history.custom =JSON.parse(r);}catch{}
-  try{const r=localStorage.getItem("yams:cur");if(r){const g=JSON.parse(r);if(g?.players?.length&&g?.scores){S.players=g.players;S.scores=g.scores;S.mode=g.mode||"classic";S.view="game";}}}catch{}
+  S.lang=lsGet("yams:lang")||detectLang();
+  try{const r=lsGet("yams:h:classic");if(r)S.history.classic=JSON.parse(r);}catch{}
+  try{const r=lsGet("yams:h:custom"); if(r)S.history.custom =JSON.parse(r);}catch{}
+  try{const r=lsGet("yams:cur");if(r){const g=JSON.parse(r);if(g?.players?.length&&g?.scores){S.players=g.players;S.scores=g.scores;S.mode=g.mode||"classic";S.view="game";}}}catch{}
 }
-function saveHist(){try{localStorage.setItem(`yams:h:${S.mode}`,JSON.stringify(S.history[S.mode]));}catch{}}
-function saveCur(){try{if(S.players.length&&!S.finished)localStorage.setItem("yams:cur",JSON.stringify({players:S.players,scores:S.scores,mode:S.mode}));}catch{}}
-function clearCur(){try{localStorage.removeItem("yams:cur");}catch{}}
+function saveHist(){lsSet(`yams:h:${S.mode}`,JSON.stringify(S.history[S.mode]));}
+function saveCur(){if(S.players.length&&!S.finished)lsSet("yams:cur",JSON.stringify({players:S.players,scores:S.scores,mode:S.mode}));}
+function clearCur(){lsDel("yams:cur");}
 
 // ── CALC ──────────────────────────────────────────────────────────────────
 const sumU=sc=>UKEYS.reduce((s,k)=>s+(sc[k]??0),0);
@@ -425,7 +431,7 @@ function activePl(){
 // ── LANG UI ───────────────────────────────────────────────────────────────
 const FLAGS={fr:"🇫🇷",en:"🇬🇧",de:"🇩🇪"};
 const LCODES={fr:"FR",en:"EN",de:"DE"};
-function setLang(l){S.lang=l;localStorage.setItem("yams:lang",l);document.getElementById("lang-menu").classList.remove("open");render();}
+function setLang(l){S.lang=l;lsSet("yams:lang",l);document.getElementById("lang-menu").classList.remove("open");render();}
 function toggleLangMenu(){document.getElementById("lang-menu").classList.toggle("open");}
 function updateLangBtn(){
   const pill=document.getElementById("lang-pill");
@@ -784,7 +790,7 @@ function vHist(){
     ${cards}
   </div>`;
 }
-function delGame(mode,id){if(!confirm(t("confirmDel")))return;S.history[mode]=S.history[mode].filter(g=>g.id!==id);localStorage.setItem(`yams:h:${mode}`,JSON.stringify(S.history[mode]));render();}
+function delGame(mode,id){if(!confirm(t("confirmDel")))return;S.history[mode]=S.history[mode].filter(g=>g.id!==id);lsSet(`yams:h:${mode}`,JSON.stringify(S.history[mode]));render();}
 function exportH(mode){const b=new Blob([JSON.stringify(S.history[mode],null,2)],{type:"application/json"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=`yams-${mode}-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(u);}
 function importH(ev,mode){
   const f=ev.target.files[0];if(!f)return;
@@ -792,7 +798,7 @@ function importH(ev,mode){
     try{const d=JSON.parse(e2.target.result);if(!Array.isArray(d))throw new Error(t("histNone"));
       const ex=new Set(S.history[mode].map(g=>g.id));const added=d.filter(g=>g.id&&!ex.has(g.id));
       S.history[mode]=[...S.history[mode],...added].sort((a,b)=>b.id-a.id);
-      localStorage.setItem(`yams:h:${mode}`,JSON.stringify(S.history[mode]));render();alert(t("impOk")(added.length));
+      lsSet(`yams:h:${mode}`,JSON.stringify(S.history[mode]));render();alert(t("impOk")(added.length));
     }catch(err){alert("❌ "+err.message);}
   };r.readAsText(f);ev.target.value="";
 }
