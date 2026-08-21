@@ -516,16 +516,18 @@ function vSetup(){
     ${S.players.length>0?`<div class="session-box">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <span style="font-size:13px;font-weight:600;color:var(--blu)">${t("shareTitle")}</span>
-        ${_peer
+        ${_peer||_sessionCode
           ?`<button class="btn bs" onclick="stopSession()" style="font-size:12px;padding:5px 10px;color:var(--red)">${t("shareStop")}</button>`
-          :`<button class="btn bs" onclick="createRoom();render()" style="font-size:12px;padding:5px 10px">${t("shareActivate")}</button>`
+          :`<button class="btn bs" onclick="createRoom()" style="font-size:12px;padding:5px 10px">${t("shareActivate")}</button>`
         }
       </div>
-      ${_peer
+      ${_peerOpen
         ?`<p style="font-size:12px;color:var(--txt2);margin-bottom:8px">${t("shareCodeHint")}</p>
-           <div class="session-code">${_sessionCode||'…'}</div>
-           <div id="session-status" style="text-align:center;font-size:12px;margin-top:6px"><span style="color:var(--grn)">${t("shareActive")(_conns.length)}</span></div>`
-        :`<p style="font-size:12px;color:var(--txt2)">${t("shareHint")}</p>`
+           <div class="session-code">${_sessionCode}</div>
+           <div style="text-align:center;font-size:12px;margin-top:6px;color:var(--grn)">${t("shareActive")(_conns.length)}</div>`
+        :_sessionCode
+          ?`<div style="text-align:center;font-size:13px;color:var(--txt2);padding:10px 0">⏳ ${t("sessionConnecting")}</div>`
+          :`<p style="font-size:12px;color:var(--txt2)">${t("shareHint")}</p>`
       }
     </div>`:``}
   </div>`;
@@ -826,7 +828,8 @@ function vChamp(){
 // ── PEER-TO-PEER ──────────────────────────────────────────────────────────
 let _peer=null, _conns=[], _guestConn=null, _sessionCode=null;
 let _isGuest=false, _guestState=null, _guestStatus="";
-let _onlineMode=false; // toggle in setup
+let _onlineMode=false;
+let _peerOpen=false; // true uniquement quand le serveur a confirmé la connexion
 
 function genCode(){
   const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -862,21 +865,21 @@ function createRoom(attempt=0){
   if(_peer)return;
   const code=attempt===0?genCode():_sessionCode;
   _sessionCode=code;
-  updateSessionUI('connecting');
-  let peerOpen=false; // flag pour savoir si la connexion a déjà été établie
+  _peerOpen=false;
+  render(); // affiche "Connexion…" tout de suite
   const peer=new Peer('yam-'+code, PEER_CFG);
   _peer=peer;
   const timeout=setTimeout(()=>{
-    if(!peerOpen){
-      peer.destroy();_peer=null;
+    if(!_peerOpen){
+      peer.destroy();_peer=null;_peerOpen=false;
       if(attempt<2){setTimeout(()=>createRoom(attempt+1),2000);}
-      else{_sessionCode=null;updateSessionUI('error');}
+      else{_sessionCode=null;render();}
     }
-  },10000);
+  },15000); // 15s pour laisser Render se réveiller
   peer.on('open',()=>{
     clearTimeout(timeout);
-    peerOpen=true;
-    updateSessionUI('open');render();
+    _peerOpen=true;
+    render(); // maintenant on affiche vraiment "Session active"
   });
   peer.on('connection',conn=>{
     conn.on('open',()=>{
@@ -888,25 +891,20 @@ function createRoom(attempt=0){
     });
   });
   peer.on('error',err=>{
-    // Si déjà connecté, on ignore les erreurs non fatales (guest avec mauvais code, etc.)
-    if(peerOpen){
-      if(err.type==='peer-unavailable')return; // guest avec mauvais code → pas grave
-      if(err.type==='network'||err.type==='socket-error'||err.type==='socket-closed'){
-        updateSessionUI('error'); // signale mais ne détruit pas
-      }
+    if(_peerOpen){
+      if(err.type==='peer-unavailable')return;
       return;
     }
-    // Erreurs avant ouverture → retry
     clearTimeout(timeout);
-    if(err.type==='unavailable-id'){_peer=null;_sessionCode=null;createRoom(0);}
-    else if(attempt<2){_peer=null;setTimeout(()=>createRoom(attempt+1),2000);}
-    else{_peer=null;_sessionCode=null;updateSessionUI('error');}
+    if(err.type==='unavailable-id'){_peer=null;_peerOpen=false;_sessionCode=null;createRoom(0);}
+    else if(attempt<2){_peer=null;_peerOpen=false;setTimeout(()=>createRoom(attempt+1),2000);}
+    else{_peer=null;_peerOpen=false;_sessionCode=null;render();}
   });
 }
 
 function stopSession(){
   if(_peer){_peer.destroy();_peer=null;}
-  _conns=[];_sessionCode=null;_onlineMode=false;render();
+  _conns=[];_sessionCode=null;_peerOpen=false;render();
 }
 
 function updateSessionUI(status){
