@@ -348,7 +348,6 @@ const L={
     netError:"❌ Netzwerkfehler",sessionActive:"✅ Session aktiv",sessionConnecting:"⏳ Verbinde…",sessionError:"❌ Netzwerkfehler",
   },
 };
-function gameTitle(){return S.lang==="de"?"KNIFFEL":"YAM'S";}
 function t(k){return(L[S.lang]||L.fr)[k]||k;}
 function tRow(key){return(L[S.lang]||L.fr).rows[key]||"";}
 function tLbl(key){return(L[S.lang]||L.fr).lbl[key]||key;}
@@ -850,15 +849,31 @@ function updateGuestCount(){
   if(el)el.textContent=_conns.length>0?`👤 ${_conns.length}`:'';
 }
 
-function createRoom(){
+const PEER_CFG={
+  host:'yam-iamax.onrender.com', port:443, secure:true, path:'/yam',
+  config:{iceServers:[
+    {urls:'stun:stun.l.google.com:19302'},
+    {urls:'stun:stun1.l.google.com:19302'},
+    {urls:'stun:stun2.l.google.com:19302'},
+  ]}
+};
+
+function createRoom(attempt=0){
   if(_peer)return;
-  const code=genCode();
+  const code=attempt===0?genCode():_sessionCode;
   _sessionCode=code;
   updateSessionUI('connecting');
-  // No custom host = PeerJS cloud server (most reliable)
-  const peer=new Peer('yam-'+code);
+  const peer=new Peer('yam-'+code, PEER_CFG);
   _peer=peer;
-  peer.on('open',()=>{updateSessionUI('open');render();});
+  const timeout=setTimeout(()=>{
+    if(!peer.open){peer.destroy();_peer=null;
+      if(attempt<2){setTimeout(()=>createRoom(attempt+1),1500);}
+      else{_sessionCode=null;updateSessionUI('error');}
+    }
+  },8000);
+  peer.on('open',()=>{
+    clearTimeout(timeout);updateSessionUI('open');render();
+  });
   peer.on('connection',conn=>{
     conn.on('open',()=>{
       _conns.push(conn);
@@ -869,7 +884,9 @@ function createRoom(){
     });
   });
   peer.on('error',err=>{
-    if(err.type==='unavailable-id'){_peer=null;_sessionCode=null;createRoom();}
+    clearTimeout(timeout);
+    if(err.type==='unavailable-id'){_peer=null;_sessionCode=null;createRoom(0);}
+    else if(attempt<2){_peer=null;setTimeout(()=>createRoom(attempt+1),1500);}
     else{_peer=null;_sessionCode=null;updateSessionUI('error');}
   });
 }
