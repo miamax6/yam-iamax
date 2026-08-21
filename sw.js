@@ -1,4 +1,4 @@
-const CACHE = 'yam-iamax-v2';
+const CACHE = 'yam-iamax-v3';
 
 const ASSETS = [
   './',
@@ -24,8 +24,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-
-  // Google Fonts : réseau d'abord, cache en fallback
   if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
     e.respondWith(
       fetch(e.request)
@@ -34,8 +32,6 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-
-  // Cache-first pour tout le reste
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
