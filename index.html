@@ -963,8 +963,8 @@ function connectAsGuest(){
   if(code.length<4){const s=document.getElementById('join-status');if(s)s.textContent=t('joinTooShort');return;}
   const statusEl=document.getElementById('join-status');
   if(statusEl)statusEl.innerHTML=`<span style="color:var(--txt2)">${t('joinConnecting')}</span>`;
-  // No custom host = PeerJS cloud server
-  const peer=new Peer();
+
+  const peer=new Peer(undefined, PEER_CFG);
   // Timeout if no connection after 10s
   const timeout=setTimeout(()=>{
     peer.destroy();
