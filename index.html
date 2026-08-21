@@ -881,20 +881,6 @@ function createRoom(attempt=0){
     _peerOpen=true;
     render();
   });
-  peer.on('disconnected',()=>{
-    // Render a fermé le WebSocket silencieusement → reconnect
-    _peerOpen=false;
-    render();
-    if(_peer&&!_peer.destroyed){
-      setTimeout(()=>{
-        if(_peer&&!_peer.destroyed){
-          try{_peer.reconnect();}catch{}
-          _peer.once('open',()=>{_peerOpen=true;render();});
-        }
-      },2000);
-    }
-  });
-  peer.on('close',()=>{_peerOpen=false;render();});
   peer.on('connection',conn=>{
     conn.on('open',()=>{
       _conns.push(conn);
