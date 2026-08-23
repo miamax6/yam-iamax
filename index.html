@@ -219,6 +219,7 @@ const L={
     supportWallet:"Ouvrir dans un wallet",supportThanks:"Merci beaucoup 🙏",
     supportBack:"← Retour",supportNoAds:"Aucune publicité · Aucun traqueur · Données stockées uniquement sur ton appareil",
     codeCopied:"Code copié dans le presse-papier",copyHint:"Toucher pour copier",
+    qrHint:"Scanner pour rejoindre la session",qrShow:"Afficher le QR code",qrHide:"Masquer le QR code",
     navLive:"👁 En direct",navHome:"Accueil",navGuest:"👁 Partie",navHistory:"Historique",navChamp:"Champion",navResume:"● En cours",
     homeSub:"Feuille de score · Historique · Classements",homeNew:"✦ Nouvelle partie",
     installBtn:"📲 Installer l'app",
@@ -281,6 +282,7 @@ const L={
     supportWallet:"Open in wallet",supportThanks:"Thank you so much 🙏",
     supportBack:"← Back",supportNoAds:"No ads · No trackers · Data stored only on your device",
     codeCopied:"Code copied to clipboard",copyHint:"Tap to copy",
+    qrHint:"Scan to join the session",qrShow:"Show QR code",qrHide:"Hide QR code",
     navLive:"👁 Live",navHome:"Home",navGuest:"👁 Game",navHistory:"History",navChamp:"Champion",navResume:"● In progress",
     homeSub:"Scoresheet · History · Rankings",homeNew:"✦ New game",
     installBtn:"📲 Install app",
@@ -343,6 +345,7 @@ const L={
     supportWallet:"Im Wallet öffnen",supportThanks:"Vielen Dank 🙏",
     supportBack:"← Zurück",supportNoAds:"Keine Werbung · Keine Tracker · Daten nur auf deinem Gerät",
     codeCopied:"Code in die Zwischenablage kopiert",copyHint:"Zum Kopieren tippen",
+    qrHint:"Zum Beitreten scannen",qrShow:"QR-Code anzeigen",qrHide:"QR-Code ausblenden",
     navLive:"👁 Live",navHome:"Start",navGuest:"👁 Spiel",navHistory:"Partien",navChamp:"Bestenliste",navResume:"● Läuft noch",
     homeSub:"Spielzettel · Spielverlauf · Rangliste",homeNew:"✦ Neues Spiel",
     installBtn:"📲 App installieren",
@@ -645,7 +648,7 @@ function vSetup(){
       ${_peerOpen
         ?`<p style="font-size:12px;color:var(--txt2);margin-bottom:8px">${t("shareCodeHint")}</p>
            <div class="session-code" onclick="copyCode()" style="cursor:pointer" title="${t('copyHint')}">${_sessionCode}</div>
-           <div style="text-align:center;font-size:12px;margin-top:6px;color:var(--grn)">${t("shareActive")(_conns.length)}</div>`
+           <div style="text-align:center;font-size:12px;margin-top:6px;color:var(--grn)">${t("shareActive")(_conns.length)}</div><div style="text-align:center;margin-top:10px"><button class="btn bs" style="font-size:12px;padding:6px 12px" onclick="toggleQR()">${_showQR?t("qrHide"):t("qrShow")}</button></div>${_showQR?`<div style="display:flex;flex-direction:column;align-items:center;margin-top:10px"><div>${qrSVG(sessionURL(),180)}</div><p style="font-size:11px;color:var(--txt2);margin-top:8px">${t("qrHint")}</p></div>`:""}`
         :_sessionCode
           ?`<div style="text-align:center;font-size:13px;color:var(--txt2);padding:10px 0">${t("sessionConnecting")}</div>`
           :_sessionError
@@ -965,6 +968,200 @@ function vChamp(){
   </div>`;
 }
 
+// ── QR CODE ──────────────────────────────────────────────────────────────
+// Encodeur QR minimal — mode octet, correction M, versions 1 a 10.
+// Suffisant pour une URL de session (~60 caracteres).
+function qrMatrix(text){
+  const DATA=[16,28,44,64,86,108,124,154,182,216];           // codewords de donnees (niveau M)
+  const TOTAL=[26,44,70,100,134,172,196,242,292,346];        // codewords totaux
+  const ECW=[10,16,26,18,24,16,18,22,22,26];                 // EC par bloc
+  const BLOCKS=[[1,0],[1,0],[1,0],[2,0],[2,0],[4,0],[4,0],[2,2],[3,2],[4,1]];
+  const ALIGN=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
+
+  // ── octets UTF-8 ──
+  const bytes=[];
+  for(const ch of unescape(encodeURIComponent(text))) bytes.push(ch.charCodeAt(0));
+
+  // ── choix de version ──
+  let ver=-1;
+  for(let v=0;v<10;v++){
+    const cci=(v+1)<10?8:16;
+    if(4+cci+bytes.length*8 <= DATA[v]*8){ver=v;break;}
+  }
+  if(ver<0) throw new Error("texte trop long pour le QR");
+  const version=ver+1, size=version*4+17;
+
+  // ── flux binaire ──
+  const bits=[];
+  const put=(val,len)=>{for(let i=len-1;i>=0;i--)bits.push((val>>i)&1);};
+  put(4,4);                                   // mode octet
+  put(bytes.length, version<10?8:16);
+  bytes.forEach(b=>put(b,8));
+  const cap=DATA[ver]*8;
+  for(let i=0;i<4&&bits.length<cap;i++)bits.push(0);   // terminateur
+  while(bits.length%8)bits.push(0);
+  const dataCw=[];
+  for(let i=0;i<bits.length;i+=8){let b=0;for(let j=0;j<8;j++)b=(b<<1)|bits[i+j];dataCw.push(b);}
+  const PAD=[0xEC,0x11];
+  for(let i=0;dataCw.length<DATA[ver];i++)dataCw.push(PAD[i%2]);
+
+  // ── Galois GF(256) ──
+  const EXP=new Array(512),LOG=new Array(256);
+  for(let i=0,x=1;i<255;i++){EXP[i]=x;LOG[x]=i;x<<=1;if(x&256)x^=0x11D;}
+  for(let i=255;i<512;i++)EXP[i]=EXP[i-255];
+  const mul=(a,b)=>a&&b?EXP[LOG[a]+LOG[b]]:0;
+
+  // polynome generateur
+  const genPoly=n=>{let g=[1];for(let i=0;i<n;i++){const ng=new Array(g.length+1).fill(0);
+    for(let j=0;j<g.length;j++){ng[j]^=mul(g[j],1);ng[j+1]^=mul(g[j],EXP[i]);}g=ng;}return g;};
+
+  const rs=(data,n)=>{const g=genPoly(n),res=new Array(n).fill(0);
+    for(const d of data){const f=d^res[0];res.shift();res.push(0);
+      for(let i=0;i<n;i++)res[i]^=mul(g[i+1],f);}return res;};
+
+  // ── decoupage en blocs + entrelacement ──
+  const [b1,b2]=BLOCKS[ver], nb=b1+b2;
+  const short=Math.floor(DATA[ver]/nb);
+  const dBlocks=[],eBlocks=[];
+  let off=0;
+  for(let i=0;i<nb;i++){
+    const len=short+(i>=b1?1:0);
+    const blk=dataCw.slice(off,off+len);off+=len;
+    dBlocks.push(blk);eBlocks.push(rs(blk,ECW[ver]));
+  }
+  const finalCw=[];
+  const maxD=Math.max(...dBlocks.map(b=>b.length));
+  for(let i=0;i<maxD;i++)for(const b of dBlocks)if(i<b.length)finalCw.push(b[i]);
+  for(let i=0;i<ECW[ver];i++)for(const b of eBlocks)finalCw.push(b[i]);
+
+  // ── grille ──
+  const m=Array.from({length:size},()=>new Array(size).fill(null));
+  const set=(r,c,v)=>{if(r>=0&&r<size&&c>=0&&c<size)m[r][c]=v;};
+
+  const finder=(r,c)=>{for(let i=-1;i<=7;i++)for(let j=-1;j<=7;j++){
+    const rr=r+i,cc=c+j;if(rr<0||rr>=size||cc<0||cc>=size)continue;
+    const on=(i>=0&&i<=6&&(j===0||j===6))||(j>=0&&j<=6&&(i===0||i===6))||(i>=2&&i<=4&&j>=2&&j<=4);
+    set(rr,cc,on?1:0);}};
+  finder(0,0);finder(0,size-7);finder(size-7,0);
+
+  for(const r of ALIGN[ver])for(const c of ALIGN[ver]){
+    if((r<=8&&c<=8)||(r<=8&&c>=size-9)||(r>=size-9&&c<=8))continue;
+    for(let i=-2;i<=2;i++)for(let j=-2;j<=2;j++)
+      set(r+i,c+j,(Math.abs(i)===2||Math.abs(j)===2||(i===0&&j===0))?1:0);}
+
+  for(let i=8;i<size-8;i++){const v=i%2===0?1:0;set(6,i,v);set(i,6,v);}
+  set(size-8,8,1); // module sombre
+
+  // reserver format + version
+  for(let i=0;i<9;i++){if(m[8][i]===null)set(8,i,0);if(m[i][8]===null)set(i,8,0);}
+  for(let i=0;i<8;i++){if(m[8][size-1-i]===null)set(8,size-1-i,0);if(m[size-1-i][8]===null)set(size-1-i,8,0);}
+  if(version>=7)for(let i=0;i<6;i++)for(let j=0;j<3;j++){set(size-11+j,i,0);set(i,size-11+j,0);}
+
+  const reserved=m.map(r=>r.map(v=>v!==null));
+
+  // ── placement des donnees ──
+  let idx=0,bit=7,up=true;
+  for(let col=size-1;col>0;col-=2){
+    if(col===6)col--;
+    for(let k=0;k<size;k++){
+      const row=up?size-1-k:k;
+      for(const c of [col,col-1]){
+        if(reserved[row][c])continue;
+        let v=0;
+        if(idx<finalCw.length)v=(finalCw[idx]>>bit)&1;
+        m[row][c]=v;
+        if(--bit<0){bit=7;idx++;}
+      }
+    }
+    up=!up;
+  }
+
+  // ── masques ──
+  const MASKS=[
+    (i,j)=>(i+j)%2===0, (i,j)=>i%2===0, (i,j)=>j%3===0, (i,j)=>(i+j)%3===0,
+    (i,j)=>(Math.floor(i/2)+Math.floor(j/3))%2===0,
+    (i,j)=>((i*j)%2+(i*j)%3)===0,
+    (i,j)=>(((i*j)%2+(i*j)%3)%2)===0,
+    (i,j)=>(((i+j)%2+(i*j)%3)%2)===0];
+
+  const penalty=g=>{
+    let p=0;
+    for(let i=0;i<size;i++)for(const line of [g[i],g.map(r=>r[i])]){
+      let run=1;
+      for(let j=1;j<size;j++){
+        if(line[j]===line[j-1])run++;
+        else{if(run>=5)p+=run-2;run=1;}
+      }
+      if(run>=5)p+=run-2;
+    }
+    for(let i=0;i<size-1;i++)for(let j=0;j<size-1;j++)
+      if(g[i][j]===g[i][j+1]&&g[i][j]===g[i+1][j]&&g[i][j]===g[i+1][j+1])p+=3;
+    const pat=[1,0,1,1,1,0,1,0,0,0,0],pat2=[0,0,0,0,1,0,1,1,1,0,1];
+    for(let i=0;i<size;i++){
+      const row=g[i],col=g.map(r=>r[i]);
+      for(const line of [row,col])
+        for(let j=0;j+11<=size;j++){
+          const seg=line.slice(j,j+11);
+          if(seg.every((v,k)=>v===pat[k])||seg.every((v,k)=>v===pat2[k]))p+=40;
+        }
+    }
+    let dark=0;g.forEach(r=>r.forEach(v=>dark+=v));
+    p+=Math.floor(Math.abs(dark*100/(size*size)-50)/5)*10;
+    return p;
+  };
+
+  const fmtBits=mask=>{
+    let d=(0<<3)|mask;              // niveau M = 00
+    let v=d<<10;
+    for(let i=4;i>=0;i--)if(v&(1<<(i+10)))v^=0x537<<i;
+    return ((d<<10)|v)^0x5412;
+  };
+
+  // Choix du masque : penalites evaluees zone de format neutralisee,
+  // comme le fait l'implementation de reference.
+  let bestMask=0,bestP=Infinity;
+  for(let mk=0;mk<8;mk++){
+    const g=m.map((row,i)=>row.map((v,j)=>reserved[i][j]?v:(MASKS[mk](i,j)?v^1:v)));
+    for(let i=0;i<9;i++){g[8][i]=0;g[i][8]=0;}
+    for(let i=0;i<8;i++){g[8][size-1-i]=0;g[size-1-i][8]=0;}
+    const p=penalty(g);
+    if(p<bestP){bestP=p;bestMask=mk;}
+  }
+
+  // Construction finale avec le masque retenu
+  const out=m.map((row,i)=>row.map((v,j)=>reserved[i][j]?v:(MASKS[bestMask](i,j)?v^1:v)));
+  const f=fmtBits(bestMask);
+  for(let i=0;i<15;i++){
+    const b=(f>>(14-i))&1;
+    if(i<6)out[8][i]=b; else if(i<8)out[8][i+1]=b;
+    else if(i===8)out[7][8]=b; else out[14-i][8]=b;
+    if(i<7)out[size-1-i][8]=b; else out[8][size-15+i]=b;
+  }
+  out[size-8][8]=1;
+  if(version>=7){
+    let vv=version<<12;
+    for(let i=5;i>=0;i--)if(vv&(1<<(i+12)))vv^=0x1F25<<i;
+    const vb=(version<<12)|vv;
+    for(let i=0;i<18;i++){const b=(vb>>i)&1;
+      out[Math.floor(i/3)][size-11+i%3]=b;
+      out[size-11+i%3][Math.floor(i/3)]=b;}
+  }
+  return out;
+
+}
+
+
+function qrSVG(text,px){
+  const m=qrMatrix(text), n=m.length, q=4, tot=n+q*2;
+  let d="";
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++)if(m[i][j])d+=`M${j+q} ${i+q}h1v1h-1z`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${tot} ${tot}" width="${px}" height="${px}" shape-rendering="crispEdges" style="display:block;border-radius:8px">`+
+         `<rect width="${tot}" height="${tot}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+}
+function sessionURL(){
+  return location.origin+location.pathname+"?join="+encodeURIComponent(_sessionCode||"");
+}
+
 // ── PEER-TO-PEER ──────────────────────────────────────────────────────────
 let _peer=null, _conns=[], _guestConn=null, _sessionCode=null;
 let _isGuest=false, _guestState=null, _guestStatus="";
@@ -972,6 +1169,7 @@ let _onlineMode=false;
 let _peerOpen=false;
 let _peerPing=null;
 let _sessionError=false;
+let _showQR=false;
 
 function genCode(){
   const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1083,6 +1281,7 @@ function copyCode(){
     navigator.clipboard.writeText(_sessionCode).then(ok).catch(fallback);
   else fallback();
 }
+function toggleQR(){_showQR=!_showQR;render();}
 function stopSession(){
   if(_peerPing){clearInterval(_peerPing);_peerPing=null;}
   if(_peer){_peer.destroy();_peer=null;}
@@ -1118,10 +1317,9 @@ function showJoinUI(){
   setTimeout(()=>document.getElementById('join-code')?.focus(),100);
 }
 
-async function connectAsGuest(){
+async function connectAsGuest(preset){
   const input=document.getElementById('join-code');
-  if(!input)return;
-  const code=input.value.trim().toUpperCase();
+  const code=(preset||(input?input.value:"")).trim().toUpperCase();
   if(code.length<4){const s=document.getElementById('join-status');if(s)s.textContent=t('joinTooShort');return;}
   const statusEl=document.getElementById('join-status');
   if(statusEl)statusEl.innerHTML=`<span style="color:var(--txt2)">${t('joinConnecting')}</span>`;
@@ -1220,11 +1418,13 @@ function renderGuest(){
   const pCols=PL.map(p=>{const lead=totg(scores[p])===maxT&&N>1;return`<th class="pcol${lead?" leader":""}" style="${lead?"color:var(--gld)":""}">${lead?"👑 ":""}${x(p)}</th>`;}).join("");
 
   const upRows=UKEYS.map((key,i)=>`<tr>
-    <td class="tlbl cl" style="text-align:center;padding:4px 10px">${diceImg(i+1,32)}</td>
+    <td class="tlbl cl" style="text-align:center;padding:4px 10px;cursor:help"
+        onclick="showTip('${ULABELS[i]}',tRow('${key}'))">${diceImg(i+1,32)}</td>
     ${PL.map(p=>{const v=scores[p]?.[key];return`<td class="tc" style="font-family:'DM Mono',monospace">${v===0?"🚫":v===null?"":v}</td>`;}).join("")}</tr>`).join("");
 
   const loRows=LOWER.map(row=>`<tr>
-    <td class="tlbl cl" style="padding:5px 10px">
+    <td class="tlbl cl" style="padding:5px 10px;cursor:help"
+        onclick="showTip('${x(row.label)}','${x(row.desc)}')">
       <span style="display:block;font-size:13px;font-weight:500">${x(row.label)}</span>
       ${row.pts&&!row.chance?`<span style="font-size:10px;color:var(--txt2)">${row.pts} pts</span>`:""}
     </td>
@@ -1269,25 +1469,14 @@ function x(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replac
 
 // ── MANIFESTE PWA LOCALISE ────────────────────────────────────────────────
 function applyManifest(){
+  // Fichiers statiques same-origin : un manifeste blob: casse l'installabilite
+  // sous Chromium (Chrome, Edge), qui refuse alors de proposer l'installation.
   try{
-    const desc={fr:"Feuille de score — Classique & Perso",
-                en:"Scoresheet — Classic & Custom",
-                de:"Spielzettel — Klassisch & Hausregeln"}[S.lang]||"";
-    const m={
-      name:gameName(), short_name:gameName(), description:desc,
-      start_url:"./", display:"standalone", orientation:"portrait-primary",
-      background_color:"#1e2530", theme_color:"#e63946", lang:S.lang,
-      icons:[
-        {src:new URL("icon.svg",location.href).href,sizes:"any",type:"image/svg+xml",purpose:"any"},
-        {src:new URL("icon-maskable.svg",location.href).href,sizes:"any",type:"image/svg+xml",purpose:"maskable"}
-      ]
-    };
     const link=document.querySelector('link[rel="manifest"]');
     if(!link)return;
-    if(link._blob)URL.revokeObjectURL(link._blob);
-    const blob=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));
-    link._blob=blob; link.href=blob;
-  }catch(e){ /* repli : manifest.json statique */ }
+    const f={fr:"manifest-fr.json",en:"manifest-en.json",de:"manifest-de.json"}[S.lang]||"manifest.json";
+    if(!(link.getAttribute("href")||"").endsWith(f))link.setAttribute("href",f);
+  }catch(e){}
 }
 
 // ── PWA ───────────────────────────────────────────────────────────────────
@@ -1299,6 +1488,18 @@ if('serviceWorker' in navigator){
 loadAll();
 applyManifest();
 render();
+
+// Arrivee par QR code : ?join=CODE
+try{
+  const jc=new URLSearchParams(location.search).get("join");
+  if(jc&&/^[A-Z0-9]{4,8}$/i.test(jc)){
+    history.replaceState(null,"",location.pathname);  // evite de rejouer au refresh
+    showJoinUI();
+    const inp=document.getElementById("join-code");
+    if(inp)inp.value=jc.toUpperCase();
+    connectAsGuest(jc);
+  }
+}catch(e){}
 </script>
 </body>
 </html>
