@@ -1,6 +1,6 @@
 {
-  "name": "m.YAM.ax",
-  "short_name": "YAM'S",
+  "name": "Yam's",
+  "short_name": "Yam's",
   "description": "Feuille de score Yam's — Classique & Perso",
   "start_url": "./",
   "display": "standalone",
@@ -9,17 +9,7 @@
   "theme_color": "#e63946",
   "lang": "fr",
   "icons": [
-    {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-maskable.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
-    }
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
   ]
 }
