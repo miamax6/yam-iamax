@@ -434,7 +434,7 @@ function activePl(){
 // ── LANG UI ───────────────────────────────────────────────────────────────
 const FLAGS={fr:"🇫🇷",en:"🇬🇧",de:"🇩🇪"};
 const LCODES={fr:"FR",en:"EN",de:"DE"};
-function setLang(l){S.lang=l;lsSet("yams:lang",l);document.getElementById("lang-menu").classList.remove("open");render();}
+function setLang(l){S.lang=l;lsSet("yams:lang",l);applyManifest();document.getElementById("lang-menu").classList.remove("open");render();}
 function toggleLangMenu(){document.getElementById("lang-menu").classList.toggle("open");}
 function updateLangBtn(){
   const pill=document.getElementById("lang-pill");
@@ -450,7 +450,9 @@ window.addEventListener("appinstalled",()=>{_prompt=null;render();});
 function installApp(){if(_prompt){_prompt.prompt();_prompt.userChoice.then(()=>{_prompt=null;render();});}}
 
 // ── ROUTING ───────────────────────────────────────────────────────────────
-function gameTitle(){return S.lang==="de"?"KNIFFEL":"YAM'S";}
+const GAME_NAMES={fr:"Yam's",en:"Yahtzee",de:"Kniffel"};
+function gameName(){return GAME_NAMES[S.lang]||GAME_NAMES.fr;}
+function gameTitle(){return gameName().toUpperCase();}
 function showView(v){S.view=v;render();}
 function render(){
   // Nav
@@ -1129,6 +1131,29 @@ function renderGuest(){
 
 function x(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
+// ── MANIFESTE PWA LOCALISE ────────────────────────────────────────────────
+function applyManifest(){
+  try{
+    const desc={fr:"Feuille de score — Classique & Perso",
+                en:"Scoresheet — Classic & Custom",
+                de:"Spielzettel — Klassisch & Hausregeln"}[S.lang]||"";
+    const m={
+      name:gameName(), short_name:gameName(), description:desc,
+      start_url:"./", display:"standalone", orientation:"portrait-primary",
+      background_color:"#1e2530", theme_color:"#e63946", lang:S.lang,
+      icons:[
+        {src:new URL("icon.svg",location.href).href,sizes:"any",type:"image/svg+xml",purpose:"any"},
+        {src:new URL("icon-maskable.svg",location.href).href,sizes:"any",type:"image/svg+xml",purpose:"maskable"}
+      ]
+    };
+    const link=document.querySelector('link[rel="manifest"]');
+    if(!link)return;
+    if(link._blob)URL.revokeObjectURL(link._blob);
+    const blob=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));
+    link._blob=blob; link.href=blob;
+  }catch(e){ /* repli : manifest.json statique */ }
+}
+
 // ── PWA ───────────────────────────────────────────────────────────────────
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').catch(()=>{});
@@ -1136,6 +1161,7 @@ if('serviceWorker' in navigator){
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 loadAll();
+applyManifest();
 render();
 </script>
 </body>
