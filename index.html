@@ -186,6 +186,12 @@ thead tr th.ca{background:#2a3a52!important;color:var(--blu)!important}
 // ── I18N ──────────────────────────────────────────────────────────────────
 const L={
   fr:{
+    supportLink:"☕ Soutenir le développeur",supportTitle:"Soutenir le développeur",
+    supportIntro:"yam.iamax est gratuit, sans publicité et sans collecte de données. Si l'app te plaît, tu peux offrir un café au développeur.",
+    supportPaypal:"Offrir un café (PayPal)",supportCrypto:"Ou en crypto (Solana)",
+    supportCopy:"Copier l'adresse",supportCopied:"✅ Adresse copiée",
+    supportWallet:"Ouvrir dans un wallet",supportThanks:"Merci beaucoup 🙏",
+    supportBack:"← Retour",supportNoAds:"Aucune publicité · Aucun traqueur · Données stockées uniquement sur ton appareil",
     navLive:"👁 En direct",navHome:"Accueil",navGuest:"👁 Partie",navHistory:"Historique",navChamp:"Champion",navResume:"● En cours",
     homeSub:"Feuille de score · Historique · Classements",homeNew:"✦ Nouvelle partie",
     installBtn:"📲 Installer l'app",
@@ -241,6 +247,12 @@ const L={
     netError:"❌ Erreur réseau",sessionActive:"✅ Session active",sessionConnecting:"⏳ Connexion…",sessionError:"❌ Erreur réseau",
   },
   en:{
+    supportLink:"☕ Support the developer",supportTitle:"Support the developer",
+    supportIntro:"yam.iamax is free, ad-free and collects no data. If you enjoy the app, you can buy the developer a coffee.",
+    supportPaypal:"Buy a coffee (PayPal)",supportCrypto:"Or with crypto (Solana)",
+    supportCopy:"Copy address",supportCopied:"✅ Address copied",
+    supportWallet:"Open in wallet",supportThanks:"Thank you so much 🙏",
+    supportBack:"← Back",supportNoAds:"No ads · No trackers · Data stored only on your device",
     navLive:"👁 Live",navHome:"Home",navGuest:"👁 Game",navHistory:"History",navChamp:"Champion",navResume:"● In progress",
     homeSub:"Scoresheet · History · Rankings",homeNew:"✦ New game",
     installBtn:"📲 Install app",
@@ -296,6 +308,12 @@ const L={
     netError:"❌ Network error",sessionActive:"✅ Session active",sessionConnecting:"⏳ Connecting…",sessionError:"❌ Network error",
   },
   de:{
+    supportLink:"☕ Entwickler unterstützen",supportTitle:"Entwickler unterstützen",
+    supportIntro:"yam.iamax ist kostenlos, werbefrei und sammelt keine Daten. Wenn dir die App gefällt, kannst du dem Entwickler einen Kaffee spendieren.",
+    supportPaypal:"Kaffee spendieren (PayPal)",supportCrypto:"Oder per Krypto (Solana)",
+    supportCopy:"Adresse kopieren",supportCopied:"✅ Adresse kopiert",
+    supportWallet:"Im Wallet öffnen",supportThanks:"Vielen Dank 🙏",
+    supportBack:"← Zurück",supportNoAds:"Keine Werbung · Keine Tracker · Daten nur auf deinem Gerät",
     navLive:"👁 Live",navHome:"Start",navGuest:"👁 Spiel",navHistory:"Partien",navChamp:"Bestenliste",navResume:"● Läuft noch",
     homeSub:"Spielzettel · Spielverlauf · Rangliste",homeNew:"✦ Neues Spiel",
     installBtn:"📲 App installieren",
@@ -468,7 +486,7 @@ function render(){
   document.getElementById("nb-live").classList.toggle("on",_isGuest&&S.view!=="guest");
   updateLangBtn();
   if(S.view==="guest"){renderGuest();return;}
-  const fns={home:vHome,setup:vSetup,game:vGame,history:vHist,champion:vChamp};
+  const fns={home:vHome,setup:vSetup,game:vGame,history:vHist,champion:vChamp,support:vSupport};
   document.getElementById("app").innerHTML=(fns[S.view]||vHome)();
   if(S.view==="home"){const el=document.getElementById("hero-dice");if(el)el.onclick=rollDice;}
   if(S.view==="setup")setTimeout(()=>document.getElementById("name-input")?.focus(),50);
@@ -487,6 +505,7 @@ function vHome(){
     ${_prompt?`<div style="margin-top:10px"><button class="btn bs" onclick="installApp()" style="font-size:13px">${t("installBtn")}</button></div>`:""}
     ${champ?`<div><div class="cbanner">👑 <strong>${x(champ.name)}</strong> — ${champ.score} ${t("pts")}</div></div>`:""}
     <p style="color:var(--txt2);font-size:13px;margin-top:14px">${nc} ${t(nc>1?"histGames":"histGame")} ${t("modeClassic")} · ${np} ${t("modeCustom")}</p>
+    <div><button class="home-sup" onclick="showView('support')">${t("supportLink")}</button></div>
   </div>`;
 }
 function rollDice(){
@@ -496,6 +515,60 @@ function rollDice(){
   const n=Math.floor(Math.random()*6)+1;
   setTimeout(()=>{el.innerHTML=`<img src="${diceSVG(n,52,null)}" width="52" height="52" style="display:inline-block">`;},350);
   setTimeout(()=>{el.classList.remove("rolling");el.style.animation="none";void el.offsetWidth;el.style.animation="";},700);
+}
+
+
+// ── SOUTIEN ───────────────────────────────────────────────────────────────
+// Remplace ces deux constantes par tes identifiants reels.
+const PAYPAL_URL="https://paypal.me/TON_PSEUDO";
+const SOLANA_ADDR="TA_CLE_PUBLIQUE_SOLANA";
+
+function vSupport(){
+  const hasPaypal=!PAYPAL_URL.includes("TON_PSEUDO");
+  const hasSol=!SOLANA_ADDR.includes("TA_CLE");
+  return`<div class="sup-wrap">
+    <span class="sup-emoji">☕</span>
+    <h2 class="sup-h">${t("supportTitle")}</h2>
+    <p class="sup-p">${t("supportIntro")}</p>
+
+    ${hasPaypal?`<a class="sup-btn sup-paypal" href="${PAYPAL_URL}" target="_blank" rel="noopener noreferrer">
+      ☕ ${t("supportPaypal")}
+    </a>`:`<div class="sup-addr" style="color:var(--txt2)">PayPal : lien a configurer</div>`}
+
+    ${hasSol?`
+      <div class="sup-sec">${t("supportCrypto")}</div>
+      <div class="sup-addr" id="sol-addr">${x(SOLANA_ADDR)}</div>
+      <div class="sup-row">
+        <button class="btn bs" onclick="copySol()">📋 ${t("supportCopy")}</button>
+        <a class="btn bs" href="solana:${encodeURIComponent(SOLANA_ADDR)}" style="justify-content:center;text-decoration:none">👛 ${t("supportWallet")}</a>
+      </div>
+      <div class="sup-toast" id="sol-toast"></div>
+    `:`
+      <div class="sup-sec">${t("supportCrypto")}</div>
+      <div class="sup-addr" style="color:var(--txt2)">Solana : adresse a configurer</div>
+    `}
+
+    <!-- EMPLACEMENT PUBLICITE (voir mise en garde) : inserer ici le script de la regie -->
+
+    <p class="sup-note">${t("supportNoAds")}</p>
+    <button class="btn bs" style="margin-top:18px" onclick="showView('home')">${t("supportBack")}</button>
+  </div>`;
+}
+
+function copySol(){
+  const toast=document.getElementById("sol-toast");
+  const done=()=>{ if(toast){toast.textContent=t("supportCopied");setTimeout(()=>{if(toast)toast.textContent="";},2500);} };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(SOLANA_ADDR).then(done).catch(fallback);
+  } else fallback();
+  function fallback(){
+    try{
+      const ta=document.createElement("textarea");
+      ta.value=SOLANA_ADDR;ta.style.position="fixed";ta.style.opacity="0";
+      document.body.appendChild(ta);ta.select();document.execCommand("copy");
+      document.body.removeChild(ta);done();
+    }catch{}
+  }
 }
 
 // ── SETUP ─────────────────────────────────────────────────────────────────
