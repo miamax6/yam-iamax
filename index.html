@@ -150,6 +150,32 @@ thead tr th.ca{background:#2a3a52!important;color:var(--blu)!important}
 .session-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(91,155,213,.12);border:1px solid rgba(91,155,213,.3);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--blu);font-weight:600}
 .guest-bar{background:#1a2236;border-bottom:1px solid var(--brd);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--blu)}
 .guest-readonly{background:rgba(230,57,70,.06);border:1px solid rgba(230,57,70,.2);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--red);font-weight:600}
+/* ── Page soutien ── */
+.home-sup{display:inline-block;margin-top:26px;color:var(--txt2);font-size:13px;
+  background:none;border:none;border-bottom:1px dotted var(--brd);
+  -webkit-appearance:none;appearance:none;
+  padding:4px 2px;cursor:pointer;font-family:inherit}
+.home-sup:hover{color:var(--gld);border-bottom-color:var(--gld)}
+.sup-wrap{max-width:460px;margin:0 auto;text-align:center;padding:24px 0}
+.sup-emoji{font-size:52px;display:block;margin-bottom:10px}
+.sup-h{font-family:'Unbounded',sans-serif;font-size:19px;font-weight:900;color:var(--txt);margin-bottom:10px}
+.sup-p{color:var(--txt2);font-size:14px;line-height:1.55;margin-bottom:22px}
+.sup-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:13px 18px;border-radius:12px;font-family:inherit;font-weight:700;font-size:15px;
+  cursor:pointer;border:none;text-decoration:none;margin-bottom:10px}
+.sup-paypal{background:#ffc439;color:#003087}
+.sup-paypal:hover{background:#f0b32e}
+.sup-sec{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--txt2);margin:22px 0 10px;font-family:'Unbounded',sans-serif}
+.sup-addr{background:var(--sur2);border:1px solid var(--brd);border-radius:10px;padding:12px;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--txt);word-break:break-all;
+  line-height:1.5;margin-bottom:10px}
+.sup-row{display:flex;gap:8px}
+.sup-row .btn{flex:1;justify-content:center;font-size:13px}
+.sup-note{font-size:11px;color:var(--txt2);margin-top:22px;line-height:1.5;opacity:.75}
+.sup-toast{color:var(--grn);font-size:13px;font-weight:600;min-height:20px;margin-top:8px}
+
+@media(max-width:600px){
   :root{--nav:50px}
   nav{padding:0 8px}.logo{font-size:12px;letter-spacing:1px}
   .nav-btn{font-size:11px;padding:5px 7px}
