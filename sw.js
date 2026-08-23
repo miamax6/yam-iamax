@@ -1,9 +1,12 @@
-const CACHE = 'yam-iamax-v14';
+const CACHE = 'yam-iamax-v16';
 
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './manifest-fr.json',
+  './manifest-en.json',
+  './manifest-de.json',
   './icon.svg',
   './icon-maskable.svg',
 ];
