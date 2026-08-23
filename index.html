@@ -455,6 +455,9 @@ function loadAll(){
   S.lang=lsGet("yams:lang")||detectLang();
   try{const r=lsGet("yams:h:classic");if(r)S.history.classic=JSON.parse(r);}catch{}
   try{const r=lsGet("yams:h:custom"); if(r)S.history.custom =JSON.parse(r);}catch{}
+  // dernier mode utilise ; une partie en cours peut encore le remplacer
+  S.mode=lsGet("yams:mode")||"classic";
+  S.histView=S.mode;
   try{const r=lsGet("yams:cur");if(r){const g=JSON.parse(r);if(g?.players?.length&&g?.scores){S.players=g.players;S.scores=g.scores;S.mode=g.mode||"classic";S.view="game";}}}catch{}
 }
 function saveHist(){lsSet(`yams:h:${S.mode}`,JSON.stringify(S.history[S.mode]));}
@@ -478,6 +481,7 @@ function activePl(){
 // ── LANG UI ───────────────────────────────────────────────────────────────
 const FLAGS={fr:"🇫🇷",en:"🇬🇧",de:"🇩🇪"};
 const LCODES={fr:"FR",en:"EN",de:"DE"};
+function setMode(m){S.mode=m;lsSet("yams:mode",m);}
 function setLang(l){S.lang=l;lsSet("yams:lang",l);applyManifest();document.getElementById("lang-menu").classList.remove("open");render();}
 function toggleLangMenu(){document.getElementById("lang-menu").classList.toggle("open");}
 function updateLangBtn(){
@@ -609,8 +613,8 @@ function vSetup(){
   return`<div style="max-width:440px;margin:0 auto">
     <p class="stitle">${t("modeTitle")}</p>
     <div class="mode-toggle">
-      <button class="mode-btn${S.mode==="classic"?" on":""}" onclick="S.mode='classic';render()">${t("modeClassic")}</button>
-      <button class="mode-btn${S.mode==="custom"?" on":""}"  onclick="S.mode='custom';render()">${t("modeCustom")}</button>
+      <button class="mode-btn${S.mode==="classic"?" on":""}" onclick="setMode('classic');render()">${t("modeClassic")}</button>
+      <button class="mode-btn${S.mode==="custom"?" on":""}"  onclick="setMode('custom');render()">${t("modeCustom")}</button>
     </div>
     <p style="font-size:12px;color:var(--txt2);margin:-8px 0 16px;padding:0 4px">${S.mode==="classic"?t("modeClassicDesc"):t("modeCustomDesc")}</p>
     <p class="stitle">${t("playersTitle")}</p>
@@ -869,7 +873,7 @@ function vHist(){
   </div>`;
   if(!hist.length)return`<div class="hw">${toggle}<div class="empty"><span class="eemoji">📋</span><p>${t("histNone")}</p>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button class="btn bp" onclick="S.mode='${m}';showView('setup')">${t("homeNew")}</button>
+      <button class="btn bp" onclick="setMode('${m}');showView('setup')">${t("homeNew")}</button>
       <button class="btn bs" onclick="document.getElementById('imp0').click()">${t("histImport")}</button>
       <input type="file" id="imp0" accept=".json" style="display:none" onchange="importH(event,'${m}')">
     </div></div></div>`;
