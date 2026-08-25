@@ -1,12 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Full bleed background for maskable (no radius) -->
+  <title>Yam's</title>
   <rect width="512" height="512" fill="#1e2530"/>
-  <!-- Subtle gradient overlay -->
-  <radialGradient id="g" cx="50%" cy="50%" r="50%">
-    <stop offset="0%" stop-color="#e63946" stop-opacity="0.2"/>
-    <stop offset="100%" stop-color="#1e2530" stop-opacity="0"/>
-  </radialGradient>
-  <rect width="512" height="512" fill="url(#g)"/>
-  <!-- Dice emoji centered with safe zone padding (40px each side = ~15%) -->
-  <text x="256" y="320" text-anchor="middle" font-size="220" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">🎲</text>
+  <rect x="112.0" y="117.5" width="300.0" height="300.0" rx="51.0" fill="#000" opacity="0.18"/>
+  <rect x="106.0" y="104.0" width="300.0" height="300.0" rx="51.0" fill="#ffffff" stroke="#c9ced6" stroke-width="3.6"/>
+  <circle cx="199.8" cy="197.8" r="25.5" fill="#22262e"/>
+  <circle cx="312.2" cy="197.8" r="25.5" fill="#22262e"/>
+  <circle cx="256.0" cy="254.0" r="25.5" fill="#22262e"/>
+  <circle cx="199.8" cy="310.2" r="25.5" fill="#22262e"/>
+  <circle cx="312.2" cy="310.2" r="25.5" fill="#22262e"/>
 </svg>
