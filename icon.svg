@@ -1,8 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Background -->
-  <rect width="512" height="512" rx="80" fill="#1e2530"/>
-  <!-- Red accent circle -->
-  <circle cx="256" cy="256" r="210" fill="#e63946" opacity="0.15"/>
-  <!-- Dice emoji -->
-  <text x="256" y="340" text-anchor="middle" font-size="280" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">🎲</text>
+  <title>Yam's</title>
+  <rect x="30.4" y="38.1" width="470.0" height="470.0" rx="79.9" fill="#000" opacity="0.18"/>
+  <rect x="21.0" y="17.0" width="470.0" height="470.0" rx="79.9" fill="#ffffff" stroke="#c9ced6" stroke-width="5.6"/>
+  <circle cx="167.9" cy="163.9" r="40.0" fill="#22262e"/>
+  <circle cx="344.1" cy="163.9" r="40.0" fill="#22262e"/>
+  <circle cx="256.0" cy="252.0" r="40.0" fill="#22262e"/>
+  <circle cx="167.9" cy="340.1" r="40.0" fill="#22262e"/>
+  <circle cx="344.1" cy="340.1" r="40.0" fill="#22262e"/>
 </svg>
