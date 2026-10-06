@@ -1,4 +1,4 @@
-const CACHE = 'yam-iamax-v21';
+const CACHE = 'yam-iamax-v23';
 
 const ASSETS = [
   './',
