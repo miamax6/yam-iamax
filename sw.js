@@ -1,4 +1,4 @@
-const CACHE = 'yam-iamax-v19';
+const CACHE = 'yam-iamax-v21';
 
 const ASSETS = [
   './',
@@ -8,7 +8,12 @@ const ASSETS = [
   './manifest-en.json',
   './manifest-de.json',
   './icon.svg',
-  './icon-maskable.svg',
+  './favicon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './maskable-192.png',
+  './maskable-512.png',
+  './apple-touch-icon.png',
 ];
 
 self.addEventListener('install', e => {
